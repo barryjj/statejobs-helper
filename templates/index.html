@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Search State Jobs{% endblock %}
+
+{% block content %}
+<main class="container">
+  <h2>Search for NYS Job IDs</h2>
+
+  <form method="POST" action="/">
+    <label for="job_ids">
+      Enter Job IDs (comma-separated)
+      <input
+        type="text"
+        id="job_ids"
+        name="job_ids"
+        placeholder="e.g. 201258, 202101"
+        required
+      />
+    </label>
+    <button type="submit">Fetch Jobs</button>
+  </form>
+</main>
+{% endblock %}
