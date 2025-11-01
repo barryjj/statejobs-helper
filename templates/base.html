@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}StateJobs Helper{% endblock %}</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="container">
+    <h1><a href="/">StateJobs Helper</a></h1>
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <footer class="container" style="margin-top: 3rem;">
+    <p>Built with ❤️ using Flask + PicoCSS</p>
+  </footer>
+</body>
+</html>
