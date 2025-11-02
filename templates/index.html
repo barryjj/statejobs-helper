@@ -2,21 +2,25 @@
 {% block title %}Search State Jobs{% endblock %}
 
 {% block content %}
-<main class="container">
-  <h2>Search for NYS Job IDs</h2>
-
-  <form method="POST" action="/">
-    <label for="job_ids">
-      Enter Job IDs (comma-separated)
-      <input
-        type="text"
-        id="job_ids"
-        name="job_ids"
-        placeholder="e.g. 201258, 202101"
-        required
-      />
-    </label>
-    <button type="submit">Fetch Jobs</button>
-  </form>
-</main>
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h2 class="mb-4 text-center">Search for NYS Job IDs</h2>
+    <form method="POST" action="/">
+      <div class="mb-3">
+        <label for="job_ids" class="form-label">Enter Job IDs (comma-separated)</label>
+        <input
+          type="text"
+          class="form-control"
+          id="job_ids"
+          name="job_ids"
+          placeholder="e.g. 201258, 202101"
+          required
+        />
+      </div>
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary">Fetch Jobs</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
