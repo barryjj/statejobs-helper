@@ -15,16 +15,16 @@ html[data-ctp-theme="mocha"] {
   --ctp-info: #94e2d5;
   --ctp-border: #45475a;
   --ctp-card-shadow: 0 6px 20px rgba(137, 180, 250, 0.18);
-  --ctp-card-surface: #2a2c3c; /* slightly different to pop from --ctp-base */
+  --ctp-card-surface: #2a2c3c; /* pop from base */
 }
 
 /* --------------------------- LATTE --------------------------- */
 html[data-ctp-theme="latte"] {
-  --ctp-base: #f5efdc; /* softened from too peachy */
+  --ctp-base: #f5efdc;
   --ctp-surface: #ffffff;
   --ctp-text: #4c4f69;
   --ctp-subtext: #7c7c8a;
-  --ctp-primary: #7c5af1; /* more neutral purple-blue than peach */
+  --ctp-primary: #7c5af1;
   --ctp-secondary: #9d7aed;
   --ctp-info: #7aa2f7;
   --ctp-border: #dedee6;
@@ -38,7 +38,7 @@ html[data-ctp-theme="frappe"] {
   --ctp-surface: #3b3f58;
   --ctp-text: #c6d0f5;
   --ctp-subtext: #a5adcb;
-  --ctp-primary: #e5c890; /* warm cream accent to differentiate */
+  --ctp-primary: #e5c890;
   --ctp-secondary: #d6b98d;
   --ctp-info: #8bd5ca;
   --ctp-border: #565f7e;
@@ -52,7 +52,7 @@ html[data-ctp-theme="macchiato"] {
   --ctp-surface: #363a4f;
   --ctp-text: #cad3f5;
   --ctp-subtext: #b8c0e0;
-  --ctp-primary: #8aadf4; /* cool blue accent */
+  --ctp-primary: #8aadf4;
   --ctp-secondary: #b7bdf8;
   --ctp-info: #94e2d5;
   --ctp-border: #4f526c;
@@ -75,10 +75,9 @@ html[data-ctp-theme="vanilla"] {
 }
 
 /* ===========================================================
-   General mapping (so typical components can reuse bs-like vars)
+   Default fallback (if JS fails or theme not set)
    =========================================================== */
 :root {
-  /* fallback defaults if none applied yet */
   --ctp-base: #111;
   --ctp-surface: #222;
   --ctp-text: #eee;
@@ -91,7 +90,9 @@ html[data-ctp-theme="vanilla"] {
   --ctp-card-surface: #2a2c3c;
 }
 
-/* Apply top-level colors */
+/* ===========================================================
+   Base Layout
+   =========================================================== */
 body {
   margin: 0;
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
@@ -99,14 +100,12 @@ body {
   color: var(--ctp-text);
 }
 
-/* container constraints */
 .container {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 0 0.75rem;
+  padding: 0 1rem;
 }
 
-/* header link */
 header a {
   color: var(--ctp-primary);
   text-decoration: none;
@@ -114,11 +113,12 @@ header a {
 }
 header a:hover { color: var(--ctp-secondary); }
 
-/* footer */
-footer { color: var(--ctp-subtext); }
+footer {
+  color: var(--ctp-subtext);
+}
 
 /* ===========================================================
-   Theme-aware form controls (fix the white dropdown problem)
+   Forms + Select (theme aware)
    =========================================================== */
 select.form-select,
 input.form-control,
@@ -138,27 +138,30 @@ textarea.form-control:focus {
   box-shadow: var(--ctp-card-shadow);
 }
 
-/* make native dropdown options respect dark bg where possible (browser dependent) */
+/* Dropdown menu for dark mode compatibility */
 select.form-select option {
   background-color: var(--ctp-card-surface);
   color: var(--ctp-text);
 }
 
-/* style the theme switcher wrapper (small) */
-.theme-switcher { min-width: 120px; }
+.theme-switcher {
+  min-width: 120px;
+}
 
 /* ===========================================================
-   Job results grid and polished card styles
+   Job results grid and cards
    =========================================================== */
 .job-results {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.25rem;
-  margin: 1.75rem 0;
-  padding: 0 0.5rem;
+  gap: 1.5rem;
+  margin: 2rem auto;
+  padding-left: clamp(1rem, 3vw, 2rem);   /* ✅ Responsive side spacing */
+  padding-right: clamp(1rem, 3vw, 2rem);
+  box-sizing: border-box;
 }
 
-/* card wrapper (works with Bootstrap .card but we override visual bits) */
+/* Card visuals */
 .card, .job-card {
   background-color: var(--ctp-card-surface);
   color: var(--ctp-text);
@@ -174,10 +177,10 @@ select.form-select option {
 
 .card:hover, .job-card:hover {
   transform: translateY(-6px);
-  box-shadow: calc(var(--ctp-card-shadow) + 0px 8px 30px rgba(0,0,0,0.18));
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
 }
 
-/* card title and text */
+/* Card content */
 .card-title, .job-card h5, .job-card h3 {
   color: var(--ctp-primary);
   margin: 0 0 0.5rem 0;
@@ -189,18 +192,24 @@ select.form-select option {
 }
 .card small { color: var(--ctp-subtext); }
 
-/* links inside cards */
-.card a, .job-card a { color: var(--ctp-info); text-decoration: none; }
-.card a:hover, .job-card a:hover { color: var(--ctp-secondary); }
+.card a, .job-card a {
+  color: var(--ctp-info);
+  text-decoration: none;
+}
+.card a:hover, .job-card a:hover {
+  color: var(--ctp-secondary);
+}
 
-/* ensure cards don't hug the window edges on small screens */
 @media (max-width: 576px) {
-  .job-results { padding: 0 0.75rem; }
+  .job-results {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
   .card, .job-card { padding: 1rem; }
 }
 
 /* ===========================================================
-   Buttons (theme aware)
+   Buttons
    =========================================================== */
 .btn-primary {
   background-color: var(--ctp-primary);
@@ -213,6 +222,14 @@ select.form-select option {
   border-color: var(--ctp-secondary);
 }
 
-/* small polishing */
-h2 { text-align: center; color: var(--ctp-primary); margin-top: 0.25rem; }
-small { color: var(--ctp-subtext); }
+/* ===========================================================
+   Headers + Text
+   =========================================================== */
+h2 {
+  text-align: center;
+  color: var(--ctp-primary);
+  margin-top: 0.25rem;
+}
+small {
+  color: var(--ctp-subtext);
+}
