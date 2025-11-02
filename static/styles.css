@@ -1,14 +1,218 @@
-.card {
-  border-radius: 1rem;
-  padding: 1rem;
-  transition: all 0.2s ease-in-out;
-}
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+/* ===========================================================
+   Unified Catppuccin theme variables (per theme)
+   - CSS reads html[data-ctp-theme="..."]
+   - theme-switcher.js sets data-ctp-theme on <html>
+   =========================================================== */
+
+/* --------------------------- MOCHA --------------------------- */
+html[data-ctp-theme="mocha"] {
+  --ctp-base: #1e1e2e;
+  --ctp-surface: #313244;
+  --ctp-text: #cdd6f4;
+  --ctp-subtext: #a6adc8;
+  --ctp-primary: #89b4fa;
+  --ctp-secondary: #b4befe;
+  --ctp-info: #94e2d5;
+  --ctp-border: #45475a;
+  --ctp-card-shadow: 0 6px 20px rgba(137, 180, 250, 0.18);
+  --ctp-card-surface: #2a2c3c; /* slightly different to pop from --ctp-base */
 }
 
-/* Optional: control overflow on main container */
-main.container {
-  overflow-x: hidden;
+/* --------------------------- LATTE --------------------------- */
+html[data-ctp-theme="latte"] {
+  --ctp-base: #f5efdc; /* softened from too peachy */
+  --ctp-surface: #ffffff;
+  --ctp-text: #4c4f69;
+  --ctp-subtext: #7c7c8a;
+  --ctp-primary: #7c5af1; /* more neutral purple-blue than peach */
+  --ctp-secondary: #9d7aed;
+  --ctp-info: #7aa2f7;
+  --ctp-border: #dedee6;
+  --ctp-card-shadow: 0 6px 18px rgba(16, 18, 25, 0.08);
+  --ctp-card-surface: #ffffff;
 }
+
+/* --------------------------- FRAPPE --------------------------- */
+html[data-ctp-theme="frappe"] {
+  --ctp-base: #303446;
+  --ctp-surface: #3b3f58;
+  --ctp-text: #c6d0f5;
+  --ctp-subtext: #a5adcb;
+  --ctp-primary: #e5c890; /* warm cream accent to differentiate */
+  --ctp-secondary: #d6b98d;
+  --ctp-info: #8bd5ca;
+  --ctp-border: #565f7e;
+  --ctp-card-shadow: 0 6px 20px rgba(229,200,144,0.12);
+  --ctp-card-surface: #45486a;
+}
+
+/* ------------------------- MACCHIATO ------------------------- */
+html[data-ctp-theme="macchiato"] {
+  --ctp-base: #24273a;
+  --ctp-surface: #363a4f;
+  --ctp-text: #cad3f5;
+  --ctp-subtext: #b8c0e0;
+  --ctp-primary: #8aadf4; /* cool blue accent */
+  --ctp-secondary: #b7bdf8;
+  --ctp-info: #94e2d5;
+  --ctp-border: #4f526c;
+  --ctp-card-shadow: 0 6px 20px rgba(138,173,244,0.16);
+  --ctp-card-surface: #2f344b;
+}
+
+/* -------------------------- VANILLA -------------------------- */
+html[data-ctp-theme="vanilla"] {
+  --ctp-base: #fbf9f7;
+  --ctp-surface: #ffffff;
+  --ctp-text: #242424;
+  --ctp-subtext: #6b6b73;
+  --ctp-primary: #6b5dd6;
+  --ctp-secondary: #8c76f0;
+  --ctp-info: #179299;
+  --ctp-border: #e7e4e9;
+  --ctp-card-shadow: 0 6px 18px rgba(16, 18, 25, 0.06);
+  --ctp-card-surface: #ffffff;
+}
+
+/* ===========================================================
+   General mapping (so typical components can reuse bs-like vars)
+   =========================================================== */
+:root {
+  /* fallback defaults if none applied yet */
+  --ctp-base: #111;
+  --ctp-surface: #222;
+  --ctp-text: #eee;
+  --ctp-subtext: #bbb;
+  --ctp-primary: #89b4fa;
+  --ctp-secondary: #b4befe;
+  --ctp-info: #94e2d5;
+  --ctp-border: #333;
+  --ctp-card-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  --ctp-card-surface: #2a2c3c;
+}
+
+/* Apply top-level colors */
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
+  background-color: var(--ctp-base);
+  color: var(--ctp-text);
+}
+
+/* container constraints */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 0.75rem;
+}
+
+/* header link */
+header a {
+  color: var(--ctp-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+header a:hover { color: var(--ctp-secondary); }
+
+/* footer */
+footer { color: var(--ctp-subtext); }
+
+/* ===========================================================
+   Theme-aware form controls (fix the white dropdown problem)
+   =========================================================== */
+select.form-select,
+input.form-control,
+textarea.form-control {
+  background-color: var(--ctp-card-surface);
+  color: var(--ctp-text);
+  border: 1px solid var(--ctp-border);
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+}
+
+select.form-select:focus,
+input.form-control:focus,
+textarea.form-control:focus {
+  outline: none;
+  border-color: var(--ctp-primary);
+  box-shadow: var(--ctp-card-shadow);
+}
+
+/* make native dropdown options respect dark bg where possible (browser dependent) */
+select.form-select option {
+  background-color: var(--ctp-card-surface);
+  color: var(--ctp-text);
+}
+
+/* style the theme switcher wrapper (small) */
+.theme-switcher { min-width: 120px; }
+
+/* ===========================================================
+   Job results grid and polished card styles
+   =========================================================== */
+.job-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+  margin: 1.75rem 0;
+  padding: 0 0.5rem;
+}
+
+/* card wrapper (works with Bootstrap .card but we override visual bits) */
+.card, .job-card {
+  background-color: var(--ctp-card-surface);
+  color: var(--ctp-text);
+  border: 1px solid var(--ctp-border);
+  border-radius: 0.9rem;
+  padding: 1.15rem;
+  box-shadow: var(--ctp-card-shadow);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover, .job-card:hover {
+  transform: translateY(-6px);
+  box-shadow: calc(var(--ctp-card-shadow) + 0px 8px 30px rgba(0,0,0,0.18));
+}
+
+/* card title and text */
+.card-title, .job-card h5, .job-card h3 {
+  color: var(--ctp-primary);
+  margin: 0 0 0.5rem 0;
+}
+.card-text, .job-card p {
+  color: var(--ctp-text);
+  margin: 0.2rem 0;
+  line-height: 1.35;
+}
+.card small { color: var(--ctp-subtext); }
+
+/* links inside cards */
+.card a, .job-card a { color: var(--ctp-info); text-decoration: none; }
+.card a:hover, .job-card a:hover { color: var(--ctp-secondary); }
+
+/* ensure cards don't hug the window edges on small screens */
+@media (max-width: 576px) {
+  .job-results { padding: 0 0.75rem; }
+  .card, .job-card { padding: 1rem; }
+}
+
+/* ===========================================================
+   Buttons (theme aware)
+   =========================================================== */
+.btn-primary {
+  background-color: var(--ctp-primary);
+  border-color: var(--ctp-primary);
+  color: var(--ctp-base);
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background-color: var(--ctp-secondary);
+  border-color: var(--ctp-secondary);
+}
+
+/* small polishing */
+h2 { text-align: center; color: var(--ctp-primary); margin-top: 0.25rem; }
+small { color: var(--ctp-subtext); }
