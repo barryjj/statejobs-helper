@@ -2,39 +2,45 @@
 {% block title %}Job Results{% endblock %}
 
 {% block content %}
-<main class="container">
-  <h2>Results</h2>
+<h2 class="mb-4 text-center">Results</h2>
 
-  {% if jobs %}
-    <div class="grid job-results">
-      {% for job in jobs %}
-        <article class="job-card">
-          <h3>{{ job.title }}</h3>
-          <p><strong>Agency:</strong> {{ job.agency }}</p>
-          <p><strong>Salary Grade:</strong> {{ job.grade or 'N/A' }}</p>
-          <p><strong>Salary Range:</strong> {{ job.salary or 'N/A' }}</p>
-          <p><strong>Posted:</strong> {{ job.date_posted or 'N/A' }}</p>
-          <p><strong>Applications Due:</strong> {{ job.applications_due or 'N/A' }}</p>
-          <p><strong>Contact:</strong> {{ job.name or 'N/A' }}</p>
+{% if jobs %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for job in jobs %}
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">{{ job.title }}</h5>
+            <p class="card-text"><strong>Agency:</strong> {{ job.agency }}</p>
+            <p class="card-text"><strong>Salary Grade:</strong> {{ job.grade or 'N/A' }}</p>
+            <p class="card-text"><strong>Salary Range:</strong> {{ job.salary or 'N/A' }}</p>
+            <p class="card-text"><strong>Posted:</strong> {{ job.date_posted or 'N/A' }}</p>
+            <p class="card-text"><strong>Applications Due:</strong> {{ job.applications_due or 'N/A' }}</p>
+            <p class="card-text"><strong>Contact:</strong> {{ job.name or 'N/A' }}</p>
 
-          {% if job.email %}
-            <p>
-              <strong>Email:</strong>
-              <a
-                href="mailto:{{ job.email }}?subject=Vacancy%20%23{{ job.job_id }}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached%2C%20as%20per%20request.%0A%0AThank%20you%2C%0AJ"
-                onclick="window.open(this.href, '_blank'); return false;"
-              >
-                {{ job.email }}
-              </a>
-            </p>
-          {% else %}
-            <p><strong>Email:</strong> N/A</p>
-          {% endif %}
+            {% if job.email %}
+              <p class="card-text">
+                <strong>Email:</strong>
+                <a
+                  href="mailto:{{ job.email }}?subject=Vacancy%20%23{{ job.job_id }}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached.%0A%0AThank%20you,%0A"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{ job.email }}
+                </a>
+              </p>
+            {% else %}
+              <p class="card-text"><strong>Email:</strong> N/A</p>
+            {% endif %}
 
-          <p><strong>Address:</strong><br>{{ job.full_address | replace('\n', '<br>') | safe or 'N/A' }}</p>
+            {% if job.full_address %}
+              <p class="card-text"><strong>Address:</strong><br>{{ job.full_address | replace('\n', '<br>') | safe }}</p>
+            {% else %}
+              <p class="card-text"><strong>Address:</strong> N/A</p>
+            {% endif %}
 
-          <p>
-            <small><strong>Job ID:</strong>
+            <p class="card-text"><small>
+              <strong>Job ID:</strong>
               <a
                 href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id={{ job.job_id }}"
                 target="_blank"
@@ -42,15 +48,17 @@
               >
                 {{ job.job_id }}
               </a>
-            </small>
-          </p>
-        </article>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p>No jobs found.</p>
-  {% endif %}
+            </small></p>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-center">No jobs found.</p>
+{% endif %}
 
-  <p><a href="/" role="button">← New Search</a></p>
-</main>
+<div class="mt-4 text-center">
+  <a href="/" class="btn btn-secondary">← New Search</a>
+</div>
 {% endblock %}
