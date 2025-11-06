@@ -6,7 +6,7 @@
 
 {% if jobs %}
   <div class="container-fluid px-2" style="max-width: 90%;">
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center">
       {% for job in jobs %}
         <div class="col">
           <div class="card h-100 shadow-sm">
@@ -22,13 +22,7 @@
               {% if job.email %}
                 <p class="card-text">
                   <strong>Email:</strong>
-                  <a
-                    href="mailto:{{ job.email }}?subject=Vacancy%20%23{{ job.job_id }}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached.%0A%0AThank%20you,%0A"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {{ job.email }}
-                  </a>
+                  <a href="mailto:{{ job.email }}?subject=Vacancy%20%23{{ job.job_id }}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached.%0A%0AThank%20you,%0A" target="_blank" rel="noopener noreferrer">{{ job.email }}</a>
                 </p>
               {% else %}
                 <p class="card-text"><strong>Email:</strong> N/A</p>
@@ -40,16 +34,19 @@
                 <p class="card-text"><strong>Address:</strong> N/A</p>
               {% endif %}
 
-              <p class="card-text"><small>
+              <p class="card-text">
                 <strong>Job ID:</strong>
-                <a
-                  href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id={{ job.job_id }}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {{ job.job_id }}
-                </a>
-              </small></p>
+                <a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id={{ job.job_id }}" target="_blank" rel="noopener noreferrer">{{ job.job_id }}</a>
+              </p>
+
+              <div class="text-center mt-3">
+<a href="{{ url_for('coverletter', job_id=job.job_id) }}" class="btn btn-main btn-sm">
+  Generate Cover Letter
+</a>
+
+
+              </div>
+
             </div>
           </div>
         </div>
@@ -61,6 +58,7 @@
 {% endif %}
 
 <div class="mt-4 text-center">
-  <a href="/" class="btn btn-secondary">← New Search</a>
+  <a href="/" class="btn btn-main">← New Search</a>
 </div>
+
 {% endblock %}
