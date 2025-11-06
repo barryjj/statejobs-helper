@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hiddenHtml.value = quill.root.innerHTML;
   });
 
-  // Copy to clipboard (no style or text changes)
+  // Copy to clipboard
   copyBtn.addEventListener("click", () => {
     const temp = document.createElement("textarea");
     temp.value = quill.root.innerHTML;
@@ -39,4 +39,36 @@ document.addEventListener("DOMContentLoaded", () => {
     document.execCommand("copy");
     document.body.removeChild(temp);
   });
+
+  // === Upload Template Button ===
+  const uploadBtn = document.getElementById("upload-template-btn");
+  const fileInput = document.getElementById("template-file");
+
+  if (uploadBtn && fileInput) {
+    uploadBtn.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/upload_template", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error("Upload failed");
+        const data = await response.json();
+
+        // Replace editor contents with the extracted text
+        quill.setText(data.text || "");
+      } catch (err) {
+        console.error("Upload error:", err);
+        alert("Error uploading or processing file");
+      }
+    });
+  }
 });
