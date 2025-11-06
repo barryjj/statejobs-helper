@@ -16,8 +16,6 @@ load_dotenv()
 
 app = Flask(__name__)
 
-TINYMCE_API_KEY = os.environ.get("TINYMCE_API_KEY")
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -54,7 +52,6 @@ def coverletter():
     contact_data = parse_contact_info(html)
     job_data.update(contact_data)
     job_data["job_id"] = job_id
-    tinymce_api_key = TINYMCE_API_KEY
     filled_text = None
 
     if request.method == "POST":
@@ -66,7 +63,6 @@ def coverletter():
         "coverletter.html",
         job=job_data,
         letter_text=filled_text,
-        tinymce_api_key=TINYMCE_API_KEY,
     )
 
 
