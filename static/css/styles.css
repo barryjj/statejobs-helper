@@ -14,13 +14,22 @@
 }
 
 /* ===========================================================
-    Base Layout
-    =========================================================== */
+    GLOBAL/APPLICATION STYLES (Styles that were previously leaking)
+    ===========================================================
+    NOTE: These styles are now non-specific and may affect the editor.
+    The Quill Isolation block below will override them inside the editor.
+*/
 body {
   margin: 0;
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
   background-color: var(--ctp-base);
   color: var(--ctp-text);
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
 header a {
@@ -33,15 +42,6 @@ header a:hover {
   color: var(--ctp-accent);
 }
 
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-/* ===========================================================
-    Forms & Inputs
-    =========================================================== */
 input.form-control {
   background-color: var(--ctp-card-surface);
   color: var(--ctp-text);
@@ -60,9 +60,6 @@ input.form-control::placeholder {
   color: var(--ctp-subtext);
 }
 
-/* ===========================================================
-    Cards
-    =========================================================== */
 .card {
   background-color: var(--ctp-card-surface);
   color: var(--ctp-text);
@@ -98,9 +95,6 @@ input.form-control::placeholder {
   margin: 0.2rem 0;
 }
 
-/* ===========================================================
-    Buttons
-    =========================================================== */
 .btn {
   font-weight: 600;
   border-radius: 0.4rem;
@@ -118,22 +112,12 @@ input.form-control::placeholder {
   color: var(--ctp-base);
 }
 
-/* --- FIX: Override Bootstrap active/focus flicker for .btn-main --- */
-.btn-main:active,
-.btn-main:focus,
-.btn-main.focus {
-    /* Crucial: Maintain the color on press/focus */
+.btn-main:active, .btn-main:focus, .btn-main.focus {
     background-color: var(--ctp-accent) !important;
     border-color: var(--ctp-accent) !important;
     color: var(--ctp-base) !important;
-
-    /* Crucial: Override the default Bootstrap box-shadow (the grey flicker) */
-    box-shadow: none !important;
-
-    /* Optional: Re-add a subtle, on-brand focus ring for accessibility */
     box-shadow: 0 0 0 0.15rem rgba(249, 226, 175, 0.4) !important;
 }
-
 
 .btn-alt {
   background-color: var(--ctp-card-surface);
@@ -147,24 +131,12 @@ input.form-control::placeholder {
   border-color: var(--ctp-accent);
 }
 
-/* --- FIX: Override Bootstrap active/focus flicker for .btn-alt --- */
-.btn-alt:active,
-.btn-alt:focus,
-.btn-alt.focus {
-    /* Use the darker hover color for a "pressed" effect */
+.btn-alt:active, .btn-alt:focus, .btn-alt.focus {
     background-color: var(--ctp-surface) !important;
-
-    /* Ensure border and text stay consistent with the focused state */
     border-color: var(--ctp-accent) !important;
     color: var(--ctp-text) !important;
-
-    /* Crucial: Override the default Bootstrap box-shadow (the grey flicker) */
-    box-shadow: none !important;
-
-    /* Optional: Re-add a subtle, on-brand focus ring for accessibility */
     box-shadow: 0 0 0 0.15rem rgba(249, 226, 175, 0.4) !important;
 }
-
 
 .btn-sm {
   font-size: 0.8rem;
@@ -172,59 +144,10 @@ input.form-control::placeholder {
   min-width: 80px;
 }
 
-/* Consistent width for copy button */
 #copy-btn {
   min-width: 140px;
 }
 
-/* ===========================================================
-    Cover Letter Page
-    =========================================================== */
-.job-header {
-  font-size: 0.6em; /* significantly smaller */
-  font-weight: 600;
-  text-align: center;
-  color: var(--ctp-accent);
-  margin-bottom: 1rem;
-}
-
-/* Quill Editor */
-#editor {
-  min-height: 550px;
-  border: 1px solid var(--ctp-accent);
-  border-radius: 0;
-  background-color: var(--ctp-card-surface);
-  color: var(--ctp-text);
-  padding: 0.5rem;
-}
-
-.ql-toolbar {
-  border: 1px solid var(--ctp-accent);
-  border-radius: 0;
-  background-color: var(--ctp-surface);
-}
-
-/* Unify borders visually */
-.ql-container.ql-snow {
-  border: none;
-}
-
-/* Toolbar icons */
-.ql-toolbar svg,
-.ql-toolbar .ql-stroke,
-.ql-toolbar .ql-fill {
-  stroke: var(--ctp-accent) !important;
-  fill: var(--ctp-accent) !important;
-}
-
-.ql-toolbar .ql-picker-label,
-.ql-toolbar .ql-picker-item {
-  color: var(--ctp-text) !important;
-}
-
-/* ===========================================================
-    Misc
-    =========================================================== */
 h2 {
   color: var(--ctp-accent);
 }
@@ -235,4 +158,135 @@ a {
 
 a:hover {
   color: var(--ctp-accent);
+}
+
+.job-header {
+  font-size: 0.6em;
+  font-weight: 600;
+  text-align: center;
+  color: var(--ctp-accent);
+  margin-bottom: 1rem;
+}
+
+
+/* ===========================================================
+    QUILL EDITOR STYLES (WIDGET ISOLATION & FIXES)
+    =========================================================== */
+
+/* --- FIX 5: Content Isolation / CSS Reset for .ql-editor --- */
+.ql-editor h1,
+.ql-editor h2,
+.ql-editor h3,
+.ql-editor h4,
+.ql-editor h5,
+.ql-editor h6,
+.ql-editor p,
+.ql-editor span,
+.ql-editor div {
+  /* Reset color to the standard editor text color */
+  color: var(--ctp-text) !important;
+  /* Resetting sizes and weights to avoid global leakage */
+  font-size: 1em !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+}
+
+/* Specific: Reset anchor tags to look like standard links */
+.ql-editor a {
+  color: var(--ctp-primary) !important; /* Use a distinct link color */
+  text-decoration: underline !important;
+}
+
+/* Specific: Re-apply Quill's own heading sizes (Optional, but usually better) */
+.ql-editor h1 { font-size: 2em !important; }
+.ql-editor h2 { font-size: 1.5em !important; }
+.ql-editor h3 { font-size: 1.17em !important; }
+/* The rest of the heading styles are often controlled by Quill's formats */
+
+
+/* --- Border Structure (Completed) --- */
+.ql-toolbar {
+  border: 1px solid var(--ctp-accent) !important;
+  border-radius: 0;
+  background-color: var(--ctp-surface);
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.ql-container.ql-snow {
+  border: 1px solid var(--ctp-accent) !important;
+  border-top: 0 !important;
+  border-radius: 0;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+#editor {
+  min-height: 550px;
+  background-color: var(--ctp-card-surface);
+  color: var(--ctp-text);
+  padding: 0.5rem;
+  /* Forced borders for visual consistency */
+  border: 1px solid var(--ctp-accent) !important;
+  border-top: none !important;
+  border-radius: 0;
+}
+
+/* --- Dropdown Menu Styling (Refined) --- */
+/* Consistent border on picker label (Unexpanded) */
+.ql-snow .ql-picker-label {
+    border: 1px solid var(--ctp-border) !important;
+    padding: 2px 4px !important;
+    line-height: 18px !important;
+    border-radius: 3px;
+    color: var(--ctp-text) !important;
+}
+
+/* Hover state */
+.ql-snow .ql-picker-label:hover {
+    border-color: var(--ctp-accent) !important;
+    background-color: var(--ctp-surface) !important;
+}
+
+/* Active/Expanded state */
+.ql-snow .ql-picker.ql-expanded .ql-picker-label {
+    border-color: var(--ctp-accent) !important;
+    color: var(--ctp-text) !important;
+    background-color: var(--ctp-surface) !important;
+}
+
+.ql-picker-options {
+  background-color: var(--ctp-card-surface) !important;
+  color: var(--ctp-text) !important;
+  border: 1px solid var(--ctp-accent) !important;
+  box-shadow: var(--ctp-card-shadow);
+}
+
+.ql-picker-options .ql-picker-item:hover {
+  background-color: var(--ctp-surface) !important;
+  color: var(--ctp-text) !important;
+}
+
+.ql-toolbar .ql-picker-label,
+.ql-toolbar .ql-picker-item {
+  color: var(--ctp-text) !important;
+}
+
+/* --- Toolbar Icons (Confirmed Fixed) --- */
+.ql-toolbar svg,
+.ql-toolbar .ql-stroke,
+.ql-toolbar .ql-fill {
+  stroke: var(--ctp-accent) !important;
+}
+
+.ql-toolbar .ql-stroke {
+  fill: none !important;
+}
+
+.ql-toolbar .ql-stroke-mitter {
+  stroke: var(--ctp-accent) !important;
+}
+
+.ql-toolbar .ql-fill {
+    fill: var(--ctp-accent) !important;
 }
