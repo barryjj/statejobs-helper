@@ -1,14 +1,18 @@
 import os
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 from io import BytesIO
-from statejobs_helper.utilities import fill_template, text_to_pdf, html_to_pdf
+from statejobs_helper.utilities import (
+    fill_template,
+    text_to_pdf,
+    html_to_pdf,
+    extract_text_from_file,
+)
 from statejobs_helper.parser import (
     fetch_job_page,
     parse_job_page,
     parse_contact_info,
     parse_dates,
 )
-
 from dotenv import load_dotenv
 
 # Load .env file
@@ -68,7 +72,7 @@ def coverletter():
 
 @app.route("/coverletter/download", methods=["POST"], endpoint="coverletter_download")
 def download_pdf():
-    html_content = request.form.get("letter_html")  # NEW
+    html_content = request.form.get("letter_html")
     if not html_content:
         return "No letter content provided", 400
 
@@ -79,6 +83,20 @@ def download_pdf():
         download_name="cover_letter.pdf",
         mimetype="application/pdf",
     )
+
+
+@app.route("/upload_template", methods=["POST"])
+def upload_template():
+    file = request.files.get("file")
+    if not file:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    try:
+        extracted_text = extract_text_from_file(file)
+        return jsonify({"text": extracted_text})
+    except Exception as e:
+        print(f"Error extracting text: {e}")
+        return jsonify({"error": "Failed to extract text"}), 500
 
 
 if __name__ == "__main__":

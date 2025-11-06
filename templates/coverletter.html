@@ -17,15 +17,22 @@
       {{ letter_text | safe if letter_text else "Start writing your cover letter here..." }}
     </div>
 
+    <!-- Editor buttons -->
     <div class="mt-3 text-center">
-      <button type="button" id="copy-btn" class="btn btn-main me-2">
-        Copy to Clipboard
-      </button>
-      <button type="submit" class="btn btn-main me-2">
-        Download as PDF
-      </button>
-      <a href="{{ url_for('index') }}" class="btn btn-main ms-2">← Back to Search</a>
-    </div>
+  <button type="button" id="upload-template-btn" class="btn btn-main me-2">
+    Upload Template
+  </button>
+  <input type="file" id="template-file" accept=".txt,.docx,.pdf" style="display:none;">
+
+  <button type="button" id="copy-btn" class="btn btn-main me-2">
+    Copy to Clipboard
+  </button>
+  <button type="submit" class="btn btn-main me-2">
+    Download as PDF
+  </button>
+  <a href="{{ url_for('index') }}" class="btn btn-main">← Back to Search</a>
+</div>
+
   </form>
 </div>
 
