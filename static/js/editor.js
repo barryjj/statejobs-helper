@@ -23,8 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Load initial content if present
-  if (hiddenText.value) {
-    quill.root.innerHTML = hiddenText.value;
+  // FIX: Use Quill's clipboard module import to handle HTML insertion cleanly
+  if (hiddenHtml.value) {
+    const delta = quill.clipboard.convert(hiddenHtml.value);
+    quill.setContents(delta, 'silent');
   }
 
   // Sync hidden inputs before submitting
@@ -35,12 +37,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Copy to clipboard
   copyBtn.addEventListener("click", () => {
+    // CRITICAL FIX: Use Quill's native getText() for clean plain text copy,
+    // which is what you want when pasting into an email or Word document.
+    const cleanText = quill.getText();
+
     const temp = document.createElement("textarea");
-    temp.value = quill.root.innerHTML;
+    temp.value = cleanText; // Use clean text
     document.body.appendChild(temp);
     temp.select();
     document.execCommand("copy");
     document.body.removeChild(temp);
+
+    // Optional: Add a visual confirmation here (e.g., alert or button change)
   });
 
   // Upload template
