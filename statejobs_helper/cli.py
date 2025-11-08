@@ -1,15 +1,22 @@
-# statejobs_helper/cli.py
+"""
+CLI interface for statejobs-helper to provide some command line functionality.
+"""
+
 import argparse
 import json
+
 from statejobs_helper.parser import (
     fetch_job_page,
-    parse_job_page,
     parse_contact_info,
     parse_dates,
+    parse_job_page,
 )
 
 
 def main():
+    """
+    Command line interfact for statejobs-helper used to test fetch and parse of web data.
+    """
     parser = argparse.ArgumentParser(
         description="Fetch and display New York State job details by job ID."
     )

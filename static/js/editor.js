@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const editorEl = document.getElementById("editor");
   const hiddenText = document.getElementById("letter_text");
   const hiddenHtml = document.getElementById("letter_html");
+  const hiddenFontSize = document.getElementById("font_size_input");
   const copyBtn = document.getElementById("copy-btn");
   const uploadBtn = document.getElementById("upload-template-btn");
   const fileInput = document.getElementById("template-file");
@@ -22,11 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Load initial content if present
-  // FIX: Use Quill's clipboard module import to handle HTML insertion cleanly
+  // Load initial content if present (Prioritize HTML to preserve formatting)
   if (hiddenHtml.value) {
-    const delta = quill.clipboard.convert(hiddenHtml.value);
-    quill.setContents(delta, 'silent');
+    quill.root.innerHTML = hiddenHtml.value;
+  } else if (hiddenText.value) {
+    quill.setText(hiddenText.value);
   }
 
   // Sync hidden inputs before submitting
@@ -37,18 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Copy to clipboard
   copyBtn.addEventListener("click", () => {
-    // CRITICAL FIX: Use Quill's native getText() for clean plain text copy,
-    // which is what you want when pasting into an email or Word document.
-    const cleanText = quill.getText();
-
     const temp = document.createElement("textarea");
-    temp.value = cleanText; // Use clean text
+    temp.value = quill.root.innerHTML;
     document.body.appendChild(temp);
     temp.select();
     document.execCommand("copy");
     document.body.removeChild(temp);
-
-    // Optional: Add a visual confirmation here (e.g., alert or button change)
   });
 
   // Upload template
@@ -76,9 +71,16 @@ document.addEventListener("DOMContentLoaded", () => {
     input.type = "hidden";
     input.name = "letter_html";
     input.value = htmlContent;
-
     tempForm.appendChild(input);
+
+    const fontSizeInput = document.createElement("input");
+    fontSizeInput.type = "hidden";
+    fontSizeInput.name = "font_size";
+    fontSizeInput.value = hiddenFontSize.value;
+    tempForm.appendChild(fontSizeInput);
+
     document.body.appendChild(tempForm);
     tempForm.submit();
+    document.body.removeChild(tempForm);
   });
 });
