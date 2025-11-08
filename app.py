@@ -1,18 +1,13 @@
 import os
 from flask import Flask, render_template, request, send_file, jsonify
-from io import BytesIO
-from statejobs_helper.utilities import (
-    fill_template,
-    text_to_pdf,
-    html_to_pdf,
-    extract_text_from_file,
-)
+from statejobs_helper.coverletter import fill_coverletter_template
 from statejobs_helper.parser import (
     fetch_job_page,
     parse_job_page,
     parse_contact_info,
     parse_dates,
 )
+from statejobs_helper.utilities import html_to_pdf
 from dotenv import load_dotenv
 
 # Load .env file
@@ -61,12 +56,55 @@ def coverletter():
     if request.method == "POST":
         file = request.files.get("template")
         if file:
-            filled_text = fill_template(file, job_data)
+            filled_text = fill_coverletter_template(job_data, file)
 
     return render_template(
         "coverletter.html",
         job=job_data,
         letter_text=filled_text,
+    )
+
+
+@app.route("/upload_template", methods=["POST"])
+def upload_template():
+    # Expect hidden job_id in the form
+    job_id = request.form.get("job_id")
+    if not job_id:
+        return "No job_id provided", 400
+
+    # Ensure file field matches <input name="template">
+    if "template" not in request.files:
+        return "No file part", 400
+
+    file = request.files["template"]
+    if not file or file.filename == "":
+        return "No selected file", 400
+
+    # Refetch job data (stateless)
+    html = fetch_job_page(job_id)
+    if not html:
+        return "Could not fetch job data", 500
+
+    job_data = parse_job_page(html)
+    contact_data = parse_contact_info(html)
+    dates = parse_dates(html)
+
+    job_data.update(contact_data)
+    job_data.update(dates)
+    job_data["job_id"] = job_id
+
+    try:
+        # This should return (plain_text, html_text) per the updated coverletter.py
+        filled_text, filled_html = fill_coverletter_template(job_data, file)
+    except Exception as e:
+        return f"Failed to process template: {e}", 400
+
+    # Re-render the coverletter page, preferring HTML in the editor template logic
+    return render_template(
+        "coverletter.html",
+        job=job_data,
+        letter_text=filled_text,
+        letter_html=filled_html,
     )
 
 
@@ -83,20 +121,6 @@ def download_pdf():
         download_name="cover_letter.pdf",
         mimetype="application/pdf",
     )
-
-
-@app.route("/upload_template", methods=["POST"])
-def upload_template():
-    file = request.files.get("file")
-    if not file:
-        return jsonify({"error": "No file uploaded"}), 400
-
-    try:
-        extracted_text = extract_text_from_file(file)
-        return jsonify({"text": extracted_text})
-    except Exception as e:
-        print(f"Error extracting text: {e}")
-        return jsonify({"error": "Failed to extract text"}), 500
 
 
 if __name__ == "__main__":

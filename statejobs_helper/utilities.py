@@ -1,7 +1,11 @@
 import re
 import io
+import os
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from io import BytesIO
+from docx import Document
+from PyPDF2 import PdfReader
 
 # Try importing WeasyPrint, but handle missing system libraries gracefully
 try:
@@ -25,6 +29,48 @@ def fill_template(file, data):
         return str(data.get(key, f"{{{{ {key} }}}}"))
 
     return re.sub(r"\{\{\s*(.*?)\s*\}\}", replacer, template_text)
+
+
+def extract_text_and_html(file_storage):
+    """
+    Extract both plain text and basic HTML from an uploaded template file.
+    Supports .txt, .docx, and .pdf.
+    :param file_storage: FileStorage object from Flask (has .filename and .read())
+    :return: (text_content, html_content)
+    """
+    filename = file_storage.filename.lower()
+    file_bytes = file_storage.read()
+    text_content = ""
+    html_content = None
+
+    # Normalize line endings to '\n' to prevent extra <br> in HTML
+    def normalize_text(s: str) -> str:
+        return s.replace("\r\n", "\n").replace("\r", "\n")
+
+    if filename.endswith(".txt"):
+        text_content = normalize_text(file_bytes.decode("utf-8", errors="ignore"))
+        html_content = "<p>" + text_content.replace("\n", "<br>") + "</p>"
+
+    elif filename.endswith(".docx"):
+        from docx import Document
+
+        doc = Document(io.BytesIO(file_bytes))
+        paragraphs = [normalize_text(p.text) for p in doc.paragraphs]
+        text_content = "\n".join(paragraphs)
+        html_content = "".join(f"<p>{p}</p>" for p in paragraphs if p.strip())
+
+    elif filename.endswith(".pdf"):
+        from PyPDF2 import PdfReader
+
+        pdf = PdfReader(io.BytesIO(file_bytes))
+        text_pages = [normalize_text(page.extract_text() or "") for page in pdf.pages]
+        text_content = "\n".join(text_pages)
+        html_content = "".join(f"<p>{p}</p>" for p in text_pages if p.strip())
+
+    else:
+        raise ValueError(f"Unsupported file type: {filename}")
+
+    return text_content, html_content
 
 
 def text_to_pdf(text):
