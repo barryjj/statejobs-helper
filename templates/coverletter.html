@@ -7,32 +7,38 @@
     Job ID: {{ job.job_id }} · {{ job.title }} ({{ job.agency }})
   </h2>
 
-  <form id="editor-form" method="POST" action="{{ url_for('coverletter_download') }}">
+  <form id="editor-form" method="POST" action="{{ url_for('upload_template') }}" enctype="multipart/form-data">
     <!-- Hidden fields -->
     <textarea id="letter_text" name="letter_text" style="display:none;"></textarea>
     <input type="hidden" id="letter_html" name="letter_html" />
+    <input type="hidden" id="job_id" name="job_id" value="{{ job.job_id }}">
 
     <!-- Quill editor container -->
     <div id="editor">
-      {{ letter_text | safe if letter_text else "Start writing your cover letter here..." }}
+      {% if letter_html %}
+        {{ letter_html | safe }}
+      {% elif letter_text %}
+        {{ letter_text | safe }}
+      {% else %}
+        Start writing your cover letter here...
+      {% endif %}
     </div>
 
     <!-- Editor buttons -->
     <div class="mt-3 text-center">
-  <button type="button" id="upload-template-btn" class="btn btn-main me-2">
-    Upload Template
-  </button>
-  <input type="file" id="template-file" accept=".txt,.docx,.pdf" style="display:none;">
+      <button type="button" id="upload-template-btn" class="btn btn-main me-2">
+        Upload Template
+      </button>
+      <input type="file" id="template-file" name="template" accept=".txt,.docx,.pdf" style="display:none;">
 
-  <button type="button" id="copy-btn" class="btn btn-main me-2">
-    Copy to Clipboard
-  </button>
-  <button type="submit" class="btn btn-main me-2">
-    Download as PDF
-  </button>
-  <a href="{{ url_for('index') }}" class="btn btn-main">← Back to Search</a>
-</div>
-
+      <button type="button" id="copy-btn" class="btn btn-main me-2">
+        Copy to Clipboard
+      </button>
+      <button type="button" id="download-btn" class="btn btn-main me-2">
+        Download as PDF
+      </button>
+      <a href="{{ url_for('index') }}" class="btn btn-main">← Back to Search</a>
+    </div>
   </form>
 </div>
 

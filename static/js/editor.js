@@ -3,6 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const hiddenText = document.getElementById("letter_text");
   const hiddenHtml = document.getElementById("letter_html");
   const copyBtn = document.getElementById("copy-btn");
+  const uploadBtn = document.getElementById("upload-template-btn");
+  const fileInput = document.getElementById("template-file");
+  const downloadBtn = document.getElementById("download-btn");
   const form = document.getElementById("editor-form");
 
   // Initialize Quill
@@ -40,35 +43,34 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.removeChild(temp);
   });
 
-  // === Upload Template Button ===
-  const uploadBtn = document.getElementById("upload-template-btn");
-  const fileInput = document.getElementById("template-file");
+  // Upload template
+  uploadBtn.addEventListener("click", () => {
+    fileInput.click();
+  });
 
-  if (uploadBtn && fileInput) {
-    uploadBtn.addEventListener("click", () => fileInput.click());
+  // Auto-submit form on file selection
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+      form.submit();
+    }
+  });
 
-    fileInput.addEventListener("change", async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
+  // Download PDF
+  downloadBtn.addEventListener("click", () => {
+    const htmlContent = quill.root.innerHTML;
 
-      const formData = new FormData();
-      formData.append("file", file);
+    // POST HTML to download route
+    const tempForm = document.createElement("form");
+    tempForm.method = "POST";
+    tempForm.action = "/coverletter/download";
 
-      try {
-        const response = await fetch("/upload_template", {
-          method: "POST",
-          body: formData,
-        });
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "letter_html";
+    input.value = htmlContent;
 
-        if (!response.ok) throw new Error("Upload failed");
-        const data = await response.json();
-
-        // Replace editor contents with the extracted text
-        quill.setText(data.text || "");
-      } catch (err) {
-        console.error("Upload error:", err);
-        alert("Error uploading or processing file");
-      }
-    });
-  }
+    tempForm.appendChild(input);
+    document.body.appendChild(tempForm);
+    tempForm.submit();
+  });
 });
