@@ -1,0 +1,6 @@
+[MAIN]
+# Only fail on errors, not warnings or style issues
+#fail-on=E
+
+# Set a passing grade
+fail-under=9.0
