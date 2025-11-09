@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const hiddenText = document.getElementById("letter_text");
   const hiddenHtml = document.getElementById("letter_html");
   const hiddenFontSize = document.getElementById("font_size_input");
+  const hiddenJobId = document.getElementById("job_id");
   const copyBtn = document.getElementById("copy-btn");
   const uploadBtn = document.getElementById("upload-template-btn");
   const fileInput = document.getElementById("template-file");
@@ -42,7 +43,12 @@ document.addEventListener("DOMContentLoaded", () => {
     temp.value = quill.root.innerHTML;
     document.body.appendChild(temp);
     temp.select();
-    document.execCommand("copy");
+    try {
+        // Use document.execCommand('copy') for better compatibility in iframe environments
+        document.execCommand("copy");
+    } catch (err) {
+        console.error("Failed to copy text: ", err);
+    }
     document.body.removeChild(temp);
   });
 
@@ -67,17 +73,28 @@ document.addEventListener("DOMContentLoaded", () => {
     tempForm.method = "POST";
     tempForm.action = "/coverletter/download";
 
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "letter_html";
-    input.value = htmlContent;
-    tempForm.appendChild(input);
+    // 1. HTML Content
+    const inputHtml = document.createElement("input");
+    inputHtml.type = "hidden";
+    inputHtml.name = "letter_html";
+    inputHtml.value = htmlContent;
+    tempForm.appendChild(inputHtml);
 
+    // 2. Font Size
     const fontSizeInput = document.createElement("input");
     fontSizeInput.type = "hidden";
     fontSizeInput.name = "font_size";
     fontSizeInput.value = hiddenFontSize.value;
     tempForm.appendChild(fontSizeInput);
+
+    // 3. Job ID
+    if (hiddenJobId && hiddenJobId.value) {
+      const jobIdInput = document.createElement("input");
+      jobIdInput.type = "hidden";
+      jobIdInput.name = "job_id";
+      jobIdInput.value = hiddenJobId.value;
+      tempForm.appendChild(jobIdInput);
+    }
 
     document.body.appendChild(tempForm);
     tempForm.submit();

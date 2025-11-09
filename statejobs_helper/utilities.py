@@ -66,7 +66,8 @@ def _convert_text_to_html(text_content: str) -> str:
     # Body HTML Generation
     body_raw_block = body_raw_block.strip()
     body_paragraphs_and_breaks = body_raw_block.split("\n\n")
-    body_html_parts = ["<p><br></p>"]  # Guaranteed break after header/greeting
+    # Guaranteed break after header/greeting
+    body_html_parts = ["<p><br></p>"]
 
     for block in body_paragraphs_and_breaks:
         block_content = block.strip()
@@ -120,7 +121,6 @@ def extract_text_and_html(file_storage):
                         detected_font_size = f"{p.style.font.size.pt}pt"
                         break
 
-                    # R1723 Fix: Change 'elif' to 'if' since the block contains 'break'
                     if (
                         p.runs
                         and p.runs[0].font.size is not None
@@ -129,8 +129,9 @@ def extract_text_and_html(file_storage):
                         detected_font_size = f"{p.runs[0].font.size.pt}pt"
                         break
                 except (
-                    Exception
-                ):  # W0718: Retained broad exception to gracefully skip font detection on corruption
+                    AttributeError,
+                    ValueError,
+                ):
                     pass
 
     elif filename.endswith(".pdf"):
@@ -141,7 +142,6 @@ def extract_text_and_html(file_storage):
     else:
         raise ValueError(f"Unsupported file type: {filename}")
 
-    # R0914, R0912, R0915 Fix: Delegate HTML conversion to helper function.
     html_content = _convert_text_to_html(text_content)
 
     return text_content, html_content, detected_font_size
@@ -163,14 +163,12 @@ def text_to_pdf(text, font_size="12pt"):
     except ValueError:
         size_pt = 12.0
 
-    # W0612 Fix: Removed unused 'width' variable
     _, height = letter
 
     y = height - 72
     # Adjust line height to be proportional to the new font size (size + 2 points)
     line_height = size_pt + 2
 
-    # W0612 Fix: Removed unused loop variable 'i'
     for paragraph in text.split("\n\n"):
 
         text_object = c.beginText(72, y)
@@ -211,7 +209,6 @@ def html_to_pdf(html_content, font_size="12pt"):
     """
     if WEASYPRINT_AVAILABLE:
         try:
-            # C0301 Fix: Break long line here
             style_attr = (
                 f'style="font-size: {font_size} !important; line-height: 1.2 '
                 f'!important; margin: 0 !important; padding: 0 !important;"'
@@ -250,10 +247,10 @@ def html_to_pdf(html_content, font_size="12pt"):
             return pdf_buffer
 
         except (
-            Exception
-        ) as e:  # W0718 Fix: Catch general exception, but log before falling back
+            RuntimeError,
+            OSError,
+        ) as e:
             print(f"WeasyPrint failed, falling back to ReportLab: {e}")
-            pass
 
     # Fallback to text_to_pdf
     text_content = html_content
@@ -262,5 +259,4 @@ def html_to_pdf(html_content, font_size="12pt"):
     text_content = re.sub(r"<[^>]+>", "", text_content).strip()
     text_content = re.sub(r"\n{3,}", "\n\n", text_content)
 
-    # text_to_pdf now supports font_size, so we pass it again.
     return text_to_pdf(text_content, font_size)

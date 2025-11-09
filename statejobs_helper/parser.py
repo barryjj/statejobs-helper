@@ -188,3 +188,26 @@ def parse_contact_info(html: str) -> dict:
         info["full_address"] = full_address.strip()
 
     return info
+
+
+def get_job_data(job_id: str) -> dict | None:
+    """
+    Fetches the HTML for a single job ID and parses all relevant data.
+
+    This function abstracts the common web-scraping logic used in both
+    the CLI and the Flask app.
+    """
+    html = fetch_job_page(job_id)
+    if not html:
+        return None
+
+    job_data = parse_job_page(html)
+    contact_data = parse_contact_info(html)
+    dates = parse_dates(html)
+
+    # Combine all data
+    job_data.update(contact_data)
+    job_data.update(dates)
+    job_data["job_id"] = job_id
+
+    return job_data
