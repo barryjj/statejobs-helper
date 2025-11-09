@@ -5,12 +5,7 @@ Flask application to provide a web interface to statejobs-helper.
 from flask import Flask, render_template, request, send_file
 
 from statejobs_helper.coverletter import fill_coverletter_template
-from statejobs_helper.parser import (
-    fetch_job_page,
-    parse_contact_info,
-    parse_dates,
-    parse_job_page,
-)
+from statejobs_helper.parser import get_job_data
 from statejobs_helper.utilities import html_to_pdf
 
 app = Flask(__name__)
@@ -26,17 +21,9 @@ def index():
         results = []
 
         for job_id in job_ids:
-            html = fetch_job_page(job_id)
-            if not html:
-                continue
-
-            job_data = parse_job_page(html)
-            contact_data = parse_contact_info(html)
-            dates = parse_dates(html)
-            job_data.update(contact_data)
-            job_data.update(dates)
-            job_data["job_id"] = job_id
-            results.append(job_data)
+            job_data = get_job_data(job_id)
+            if job_data:
+                results.append(job_data)
 
         return render_template("results.html", jobs=results)
     return render_template("index.html")
@@ -51,15 +38,10 @@ def coverletter():
     if not job_id:
         return "Missing job ID", 400
 
-    # Refetch job info
-    html = fetch_job_page(job_id)
-    job_data = parse_job_page(html)
-    contact_data = parse_contact_info(html)
+    job_data = get_job_data(job_id)
 
-    dates = parse_dates(html)
-    job_data.update(contact_data)
-    job_data.update(dates)
-    job_data["job_id"] = job_id
+    if not job_data:
+        return f"Could not fetch data for job ID: {job_id}", 500
 
     filled_text = None
     font_size = "12pt"
@@ -91,18 +73,9 @@ def upload_template():
     if not file or file.filename == "":
         return "No selected file", 400
 
-    # Refetch job data (stateless)
-    html = fetch_job_page(job_id)
-    if not html:
+    job_data = get_job_data(job_id)
+    if not job_data:
         return "Could not fetch job data", 500
-
-    job_data = parse_job_page(html)
-    contact_data = parse_contact_info(html)
-    dates = parse_dates(html)
-
-    job_data.update(contact_data)
-    job_data.update(dates)
-    job_data["job_id"] = job_id
 
     try:
         filled_text, filled_html, font_size = fill_coverletter_template(job_data, file)
@@ -125,6 +98,7 @@ def download_pdf():
     """
     html_content = request.form.get("letter_html")
     raw_font_size = request.form.get("font_size", "12pt")
+    job_id = request.form.get("job_id")  # <-- NEW: Get the job ID from the form data
 
     if not html_content:
         return "No letter content provided", 400
@@ -136,10 +110,18 @@ def download_pdf():
 
     pdf_buffer = html_to_pdf(html_content, font_size)
 
+    # Dynamically set the filename based on job_id
+    if job_id:
+        # Construct the file name: Vacancy <#>.pdf
+        pdf_filename = f"Vacancy {job_id}.pdf"
+    else:
+        # Fallback to the default name if job_id is missing
+        pdf_filename = "cover_letter.pdf"
+
     return send_file(
         pdf_buffer,
         as_attachment=True,
-        download_name="cover_letter.pdf",
+        download_name=pdf_filename,
         mimetype="application/pdf",
     )
 

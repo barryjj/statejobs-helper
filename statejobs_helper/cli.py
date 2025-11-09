@@ -5,12 +5,7 @@ CLI interface for statejobs-helper to provide some command line functionality.
 import argparse
 import json
 
-from statejobs_helper.parser import (
-    fetch_job_page,
-    parse_contact_info,
-    parse_dates,
-    parse_job_page,
-)
+from statejobs_helper.parser import get_job_data
 
 
 def main():
@@ -42,16 +37,12 @@ def main():
 
     results = []
     for job_id in job_ids:
-        html = fetch_job_page(job_id)
-        if not html:
+
+        job_data = get_job_data(job_id)
+
+        if not job_data:
             continue
 
-        job_data = parse_job_page(html)
-        contact_data = parse_contact_info(html)
-        dates = parse_dates(html)
-        job_data.update(contact_data)
-        job_data.update(dates)
-        job_data["job_id"] = job_id
         results.append(job_data)
 
         # Only print human-readable output if not using --json
