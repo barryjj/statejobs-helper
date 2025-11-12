@@ -2,6 +2,8 @@
 Flask application to provide a web interface to statejobs-helper.
 """
 
+import os
+
 from flask import Flask, render_template, request, send_file
 
 from statejobs_helper.coverletter import fill_coverletter_template
@@ -127,4 +129,6 @@ def download_pdf():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Make it work both locally and on Render
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
