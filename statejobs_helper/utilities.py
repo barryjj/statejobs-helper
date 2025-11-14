@@ -3,6 +3,7 @@ General utilities for the statejobs-helper project.
 """
 
 import io
+import os
 import re
 
 from docx import Document
@@ -10,13 +11,18 @@ from PyPDF2 import PdfReader
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-# WeasyPrint optional
+# pdfkit optional
 try:
-    from weasyprint import HTML
+    import pdfkit
 
-    WEASYPRINT_AVAILABLE = True
-except ImportError:
-    WEASYPRINT_AVAILABLE = False
+    PDFKIT_AVAILABLE = True
+except (ImportError, OSError):
+    # pdfkit is not installed (need to add to requirements.txt)
+    PDFKIT_AVAILABLE = False
+
+# Liberation Sans is installed via Dockerfile and is a suitable replacement for Arial/Helvetica
+DEFAULT_FONT_FACE = "Liberation Sans"
+DEFAULT_CSS_FILE = "static/css/html_to_pdf.css"
 
 
 def fill_template(file, data):
@@ -172,8 +178,8 @@ def text_to_pdf(text, font_size="12pt"):
     for paragraph in text.split("\n\n"):
 
         text_object = c.beginText(72, y)
-        # Use the passed font size
-        text_object.setFont("Helvetica", size_pt)
+        # Use the requested default font
+        text_object.setFont(DEFAULT_FONT_FACE, size_pt)
 
         lines = [line.strip() for line in paragraph.splitlines() if line.strip()]
 
@@ -186,7 +192,7 @@ def text_to_pdf(text, font_size="12pt"):
                     c.showPage()
                     y = height - 72
                     text_object = c.beginText(72, y)
-                    text_object.setFont("Helvetica", size_pt)
+                    text_object.setFont(DEFAULT_FONT_FACE, size_pt)
 
             c.drawText(text_object)
         else:
@@ -205,35 +211,80 @@ def text_to_pdf(text, font_size="12pt"):
 
 def html_to_pdf(html_content, font_size="12pt"):
     """
-    Generates a PDF from HTML using WeasyPrint, or falls back to text_to_pdf.
+    Generates a PDF from HTML using pdfkit (wkhtmltopdf), or falls back to text_to_pdf.
     """
-    if WEASYPRINT_AVAILABLE:
+    if PDFKIT_AVAILABLE:
         try:
-            style_attr = (
-                f'style="font-size: {font_size} !important; line-height: 1.2 '
-                f'!important; margin: 0 !important; padding: 0 !important;"'
+            DEFAULT_CSS = f"""
+                     body, body * {{
+                        font-family: "{DEFAULT_FONT_FACE}", sans-serif !important;
+                        line-height: 1.2 !important;
+                        margin: 0;
+                        padding: 0;
+                    }}
+                    p {{
+                        margin-top: 0;
+                        margin-bottom: 0;
+                        text-indent: 0;
+                    }}
+                    /* Tweak for line breaks */
+                    p br {{
+                        line-height: 0.8;
+                        display: block;
+                        content: "";
+                        margin-bottom: -0.2em;
+                    }}
+
+                    {{dynamic_css}}
+            """
+            FONT_SIZE_CSS = f"""
+                    body, body * {{
+                        font-size: {font_size} !important;
+                    }}
+            """
+
+            final_css = None
+            css_template_source = DEFAULT_CSS
+
+            try:
+                absolute_path = os.path.abspath(DEFAULT_CSS_FILE)
+                with open(absolute_path, "r") as f:
+                    css_template_source = f.read()
+
+            except Exception as e:
+                pass
+
+            escaped_css_template = css_template_source.replace("{", "{{").replace(
+                "}", "}}"
             )
-            html_content_inlined = html_content.replace("<p>", f"<p {style_attr}>")
+            escaped_css_template = escaped_css_template.replace(
+                "{{dynamic_css}}", "{dynamic_css}"
+            )
+            final_css = escaped_css_template.format(dynamic_css=FONT_SIZE_CSS)
+
+            print(f"Generated final_css: {final_css}")
+
+            # Define wkhtmltopdf options
+            options = {
+                "page-size": "Letter",
+                "margin-top": "1in",
+                "margin-right": "1in",
+                "margin-bottom": "1in",
+                "margin-left": "1in",
+                "encoding": "UTF-8",
+                # This option helps with Docker/headless environments
+                "quiet": "",
+            }
+
+            # Embed the CSS directly into the HTML payload
+            html_content_inlined = html_content.strip()
             styled_html = f"""
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset="UTF-8">
                 <style>
-                    @page {{
-                        size: letter;
-                        margin: 1in;
-                    }}
-                    /* REMOVED font-family specification from global styles */
-                    body * {{
-                        font-size: {font_size} !important;
-                        line-height: 1.2 !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }}
-                    p br {{
-                        line-height: 0.8;
-                    }}
+                    {final_css}
                 </style>
             </head>
             <body>
@@ -241,19 +292,24 @@ def html_to_pdf(html_content, font_size="12pt"):
             </body>
             </html>
             """
-            pdf_buffer = io.BytesIO()
-            HTML(string=styled_html).write_pdf(pdf_buffer)
+
+            print(f"----------------\n{styled_html}\n----------------\n")
+            # 3. Generate PDF to bytes
+            # pdfkit.from_string(html, output_path, options). False as output_path returns bytes.
+            pdf_bytes = pdfkit.from_string(styled_html, False, options=options)
+
+            pdf_buffer = io.BytesIO(pdf_bytes)
             pdf_buffer.seek(0)
             return pdf_buffer
 
-        except (
-            RuntimeError,
-            OSError,
-        ) as e:
-            print(f"WeasyPrint failed, falling back to ReportLab: {e}")
+        except Exception as e:
+            # You might want to log this exception for debugging in your final app
+            print(f"pdfkit failed, falling back to ReportLab: {e}")
+            pass  # Silently fail to the fallback
 
     # Fallback to text_to_pdf
     text_content = html_content
+    # The following lines convert the HTML back into simple text for ReportLab
     text_content = re.sub(r"</?p[^>]*>", "\n\n", text_content)
     text_content = text_content.replace("<br>", "\n")
     text_content = re.sub(r"<[^>]+>", "", text_content).strip()
