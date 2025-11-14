@@ -1,0 +1,33 @@
+@page {
+    size: letter;
+    margin: 1in;
+}
+
+/* Base styles for PDF output */
+body {
+    /* Assumes Liberation Sans is installed via Dockerfile */
+    font-family: 'Liberation Sans', sans-serif;
+    /* This line-height controls the spacing within multi-line paragraphs. */
+    line-height: 1.3; 
+    color: #000000;
+}
+
+p {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* General reset for children to inherit properties from body */
+body, body * {
+    font-size: 11pt !important;
+    line-height: inherit;
+}
+
+/* Make sure explicit line breaks don't add massive vertical space within a <p> */
+p br {
+    line-height: 1.0;
+}
+
+{dynamic_css}

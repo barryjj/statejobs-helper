@@ -80,7 +80,8 @@ def fill_coverletter_template(job_data: dict, template_file):
         else "Dear Sir or Madam,"
     )
 
-    today_str = datetime.today().strftime("%m/%d/%Y")
+    # today_str = datetime.today().strftime("%m/%d/%Y")
+    today_str = datetime.today().strftime("%B %d, %Y")
     subject_line = f"Vacancy ID #{job_data.get('job_id', '')}"
 
     raw_address = job_data.get("full_address", "")

@@ -1,7 +1,10 @@
-# Use Python 3.12.6 slim image
+# Optimized Dockerfile for faster rebuilds
+# ----------------------------------------
+
+# 1. Use Python 3.12.6 slim image (CACHED)
 FROM python:3.12.6-slim
 
-# Install system libraries and fonts needed for WeasyPrint
+# 2. Install system libraries and fonts (CACHED)
 RUN apt-get update && apt-get install -y \
     fonts-liberation \
     fonts-dejavu-core \
@@ -11,20 +14,24 @@ RUN apt-get update && apt-get install -y \
     libgdk-pixbuf2.0-0 \
     libffi-dev \
     shared-mime-info \
+    wkhtmltopdf \
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory inside the container
+# 3. Set working directory (CACHED)
 WORKDIR /statejobs-helper
 
-# Copy all files from repo into container
-COPY . /statejobs-helper
+# 4. Copy ONLY requirements.txt (CACHE KEY)
+COPY requirements.txt .
 
-# Install Python dependencies
+# 5. Install Python dependencies (CACHED UNLESS requirements.txt CHANGES)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port Render uses
+# 6. Copy the rest of the application files (CACHE KEY)
+COPY . /statejobs-helper
+
+# 7. Expose the port (CACHED)
 EXPOSE 10000
 
-# Start the Flask app with Gunicorn
-# First 'app' = module (app.py), second 'app' = Flask object inside it
+# 8. Start the Flask app (CACHED)
 CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:10000"]
