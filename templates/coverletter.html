@@ -7,6 +7,14 @@
     Job ID: {{ job.job_id }} · {{ job.title }} ({{ job.agency }})
   </h2>
 
+  <div id="draft-banner" class="alert alert-warning d-flex align-items-center justify-content-between mb-3" style="display:none !important;">
+    <span>A saved draft was found for this vacancy. Restore it?</span>
+    <div>
+      <button type="button" id="draft-restore-btn" class="btn btn-sm btn-main me-2">Restore</button>
+      <button type="button" id="draft-discard-btn" class="btn btn-sm btn-secondary">Discard</button>
+    </div>
+  </div>
+
   <form id="editor-form" method="POST" action="{{ url_for('upload_template') }}" enctype="multipart/form-data">
     <!-- Hidden fields -->
     <textarea id="letter_text" name="letter_text" style="display:none;"></textarea>

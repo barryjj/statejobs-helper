@@ -5,11 +5,11 @@
 <h2 class="mb-4 text-center">Results</h2>
 
 {% if jobs %}
-  <div class="container-fluid px-2" style="max-width: 90%;">
+  <div id="results-container" class="container-fluid px-2" style="max-width: 90%;">
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center">
       {% for job in jobs %}
         <div class="col">
-          <div class="card h-100 shadow-sm">
+          <div class="card h-100 shadow-sm" data-job-id="{{ job.job_id }}">
             <div class="card-body">
               <h5 class="card-title">{{ job.title }}</h5>
               <p class="card-text"><strong>Agency:</strong> {{ job.agency }}</p>
@@ -39,14 +39,12 @@
                 <a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id={{ job.job_id }}" target="_blank" rel="noopener noreferrer">{{ job.job_id }}</a>
               </p>
 
-              <div class="text-center mt-3">
-<a href="{{ url_for('coverletter', job_id=job.job_id) }}" class="btn btn-main btn-sm">
-  Generate Cover Letter
-</a>
-
-
+              <div class="text-center mt-3 d-flex gap-2 justify-content-center flex-wrap result-card-actions">
+                <a href="{{ url_for('coverletter', job_id=job.job_id) }}" class="btn btn-main btn-sm">
+                  Generate Cover Letter
+                </a>
+                {# Applied toggle button injected here by history.js #}
               </div>
-
             </div>
           </div>
         </div>
@@ -60,5 +58,16 @@
 <div class="mt-4 text-center">
   <a href="/" class="btn btn-main">← New Search</a>
 </div>
+{% endblock %}
 
+{% block scripts %}
+<script>
+  window.FETCHED_JOBS = {{ jobs | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    StatejobsHistory.initResultsPage(window.FETCHED_JOBS);
+  });
+</script>
 {% endblock %}
