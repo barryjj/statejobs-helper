@@ -170,6 +170,138 @@ a:hover {
 
 
 /* ===========================================================
+    CARD STACK
+    =========================================================== */
+
+.card-stack-wrapper {
+  position: relative;
+  /* Extra margin so the shadow cards don't clip */
+  margin-bottom: 10px;
+}
+
+.card-stack-wrapper::before,
+.card-stack-wrapper::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.6rem;
+  border: 1px solid var(--ctp-border);
+}
+
+.card-stack-wrapper::before {
+  top: 6px;
+  left: 6px;
+  background-color: var(--ctp-surface);
+  z-index: -1;
+}
+
+.card-stack-wrapper::after {
+  top: 12px;
+  left: 12px;
+  background-color: var(--ctp-base);
+  z-index: -2;
+}
+
+/* ===========================================================
+    APPLIED / DANGER BUTTONS
+    =========================================================== */
+
+.btn-applied {
+  background-color: #a6e3a1;
+  color: var(--ctp-base);
+  border: 1px solid #a6e3a1;
+}
+
+.btn-applied:hover {
+  background-color: rgba(166, 227, 161, 0.85);
+  color: var(--ctp-base);
+}
+
+.btn-applied:active, .btn-applied:focus {
+  background-color: #a6e3a1 !important;
+  border-color: #a6e3a1 !important;
+  color: var(--ctp-base) !important;
+  box-shadow: 0 0 0 0.15rem rgba(166, 227, 161, 0.4) !important;
+}
+
+.btn-danger-alt {
+  background-color: var(--ctp-card-surface);
+  color: #f38ba8;
+  border: 1px solid #f38ba8;
+}
+
+.btn-danger-alt:hover {
+  background-color: rgba(243, 139, 168, 0.15);
+  color: #f38ba8;
+  border-color: #f38ba8;
+}
+
+.btn-danger-alt:active, .btn-danger-alt:focus {
+  background-color: rgba(243, 139, 168, 0.2) !important;
+  border-color: #f38ba8 !important;
+  color: #f38ba8 !important;
+  box-shadow: 0 0 0 0.15rem rgba(243, 139, 168, 0.3) !important;
+}
+
+/* ===========================================================
+    STATUS BADGES
+    =========================================================== */
+
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.55em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.3rem;
+  white-space: nowrap;
+}
+
+.badge-applied {
+  background-color: rgba(166, 227, 161, 0.2);
+  color: #a6e3a1;
+  border: 1px solid #a6e3a1;
+}
+
+.badge-pending {
+  background-color: rgba(166, 173, 200, 0.15);
+  color: var(--ctp-subtext);
+  border: 1px solid var(--ctp-border);
+}
+
+/* ===========================================================
+    HISTORY TABLE (LIST VIEW)
+    =========================================================== */
+
+.table-history {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--ctp-text);
+}
+
+.table-history thead th {
+  color: var(--ctp-accent);
+  border-bottom: 1px solid var(--ctp-border);
+  padding: 0.6rem 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table-history tbody tr {
+  border-bottom: 1px solid var(--ctp-border);
+  transition: background-color 0.15s ease;
+}
+
+.table-history tbody tr:hover {
+  background-color: var(--ctp-surface);
+}
+
+.table-history td {
+  padding: 0.55rem 0.75rem;
+  vertical-align: middle;
+}
+
+/* ===========================================================
     QUILL EDITOR STYLES (WIDGET ISOLATION & FIXES)
     =========================================================== */
 

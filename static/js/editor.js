@@ -24,6 +24,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Autosave
+  const jobId = hiddenJobId ? hiddenJobId.value : null;
+  const draftKey = jobId ? `coverletter_draft_${jobId}` : null;
+  const draftBanner = document.getElementById("draft-banner");
+  const restoreBtn = document.getElementById("draft-restore-btn");
+  const discardBtn = document.getElementById("draft-discard-btn");
+  let autosaveTimer = null;
+
+  function saveDraft() {
+    if (!draftKey) return;
+    localStorage.setItem(draftKey, quill.root.innerHTML);
+  }
+
+  function clearDraft() {
+    if (draftKey) localStorage.removeItem(draftKey);
+  }
+
   // Load initial content if present (Prioritize HTML to preserve formatting)
   if (hiddenHtml.value) {
     quill.root.innerHTML = hiddenHtml.value;
@@ -31,10 +48,35 @@ document.addEventListener("DOMContentLoaded", () => {
     quill.setText(hiddenText.value);
   }
 
-  // Sync hidden inputs before submitting
+  // Check for a saved draft after loading server content
+  if (draftKey) {
+    const savedDraft = localStorage.getItem(draftKey);
+    if (savedDraft) {
+      draftBanner.style.removeProperty("display");
+
+      restoreBtn.addEventListener("click", () => {
+        quill.root.innerHTML = savedDraft;
+        draftBanner.style.display = "none";
+      });
+
+      discardBtn.addEventListener("click", () => {
+        clearDraft();
+        draftBanner.style.display = "none";
+      });
+    }
+  }
+
+  // Autosave 3s after last edit
+  quill.on("text-change", () => {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(saveDraft, 3000);
+  });
+
+  // Sync hidden inputs before submitting, clear draft on template upload
   form.addEventListener("submit", () => {
     hiddenText.value = quill.getText();
     hiddenHtml.value = quill.root.innerHTML;
+    clearDraft();
   });
 
   // Copy to clipboard
@@ -96,6 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tempForm.appendChild(jobIdInput);
     }
 
+    clearDraft();
     document.body.appendChild(tempForm);
     tempForm.submit();
     document.body.removeChild(tempForm);
