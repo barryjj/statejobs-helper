@@ -27,9 +27,15 @@ body {
 }
 
 .container {
-  max-width: 1000px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
+}
+
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem 3rem;
 }
 
 header a {
@@ -170,18 +176,23 @@ a:hover {
 
 
 /* ===========================================================
-    CARD STACK
+    CARD DECK NAVIGATOR
     =========================================================== */
 
-.card-stack-wrapper {
-  position: relative;
-  /* Extra margin so the shadow cards don't clip */
-  margin-bottom: 10px;
+.card-deck-layout {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
 }
 
-.card-stack-wrapper::before,
-.card-stack-wrapper::after {
-  content: '';
+.card-deck-stage {
+  flex: 1;
+  position: relative;
+  /* Room for the peek cards below/behind */
+  padding-bottom: 18px;
+}
+
+.deck-peek {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -189,18 +200,57 @@ a:hover {
   border: 1px solid var(--ctp-border);
 }
 
-.card-stack-wrapper::before {
-  top: 6px;
-  left: 6px;
+.deck-peek-1 {
+  top: 8px;
+  left: 0;
   background-color: var(--ctp-surface);
+  z-index: 0;
+}
+
+.deck-peek-2 {
+  top: 16px;
+  left: 0;
+  background-color: var(--ctp-base);
   z-index: -1;
 }
 
-.card-stack-wrapper::after {
-  top: 12px;
-  left: 12px;
-  background-color: var(--ctp-base);
-  z-index: -2;
+.card-deck-stage .card {
+  position: relative;
+  z-index: 1;
+}
+
+.deck-nav-btn {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ctp-card-surface);
+  color: var(--ctp-accent);
+  border: 1px solid var(--ctp-border);
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.deck-nav-btn:hover:not(:disabled) {
+  background-color: var(--ctp-surface);
+  border-color: var(--ctp-accent);
+}
+
+.deck-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.deck-counter {
+  text-align: center;
+  margin-top: 0.75rem;
+  color: var(--ctp-subtext);
+  font-size: 0.875rem;
 }
 
 /* ===========================================================

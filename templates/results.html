@@ -2,12 +2,12 @@
 {% block title %}Job Results{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width:1100px;">
+<div class="page-container">
   <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <h2 class="mb-0">Results</h2>
     <div class="d-flex align-items-center gap-2">
-      <div class="btn-group" role="group" aria-label="View mode">
-        <button id="btn-card-view" class="btn btn-sm view-toggle-btn" title="Card view">
+      <div class="btn-group" role="group">
+        <button id="btn-card-view" class="btn btn-sm view-toggle-btn active" title="Card view">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
             <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
           </svg>
@@ -21,91 +21,44 @@
     </div>
   </div>
 
-  {% if jobs %}
-    <div id="results-card-container">
-      <div class="row row-cols-1 row-cols-lg-2 g-4">
-        {% for job in jobs %}
-          <div class="col">
-            <div class="card-stack-wrapper">
-              <div class="card h-100 shadow-sm result-card" data-job-id="{{ job.job_id }}">
-                <div class="card-body">
-                  <h5 class="card-title">{{ job.title }}</h5>
-                  <p class="card-text"><strong>Agency:</strong> {{ job.agency }}</p>
-                  <p class="card-text"><strong>Salary Grade:</strong> {{ job.grade or 'N/A' }}</p>
-                  <p class="card-text"><strong>Salary Range:</strong> {{ job.salary or 'N/A' }}</p>
-                  <p class="card-text"><strong>Posted:</strong> {{ job.date_posted or 'N/A' }}</p>
-                  <p class="card-text"><strong>Applications Due:</strong> {{ job.applications_due or 'N/A' }}</p>
-                  <p class="card-text"><strong>Contact:</strong> {{ job.name or 'N/A' }}</p>
-                  {% if job.email %}
-                    <p class="card-text"><strong>Email:</strong>
-                      <a href="mailto:{{ job.email }}?subject=Vacancy%20%23{{ job.job_id }}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached.%0A%0AThank%20you,%0A" target="_blank" rel="noopener noreferrer">{{ job.email }}</a>
-                    </p>
-                  {% else %}
-                    <p class="card-text"><strong>Email:</strong> N/A</p>
-                  {% endif %}
-                  {% if job.full_address %}
-                    <p class="card-text"><strong>Address:</strong><br>{{ job.full_address | replace('\n', '<br>') | safe }}</p>
-                  {% else %}
-                    <p class="card-text"><strong>Address:</strong> N/A</p>
-                  {% endif %}
-                  <p class="card-text"><strong>Job ID:</strong>
-                    <a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id={{ job.job_id }}" target="_blank" rel="noopener noreferrer">{{ job.job_id }}</a>
-                  </p>
-                  <div class="text-center mt-3 d-flex gap-2 justify-content-center flex-wrap result-card-actions">
-                    <a href="{{ url_for('coverletter', job_id=job.job_id) }}" class="btn btn-main btn-sm">Generate Cover Letter</a>
-                    {# Applied toggle injected by history.js #}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-    <div id="results-list-container" style="display:none;"></div>
-  {% else %}
-    <p class="text-center text-secondary">No valid jobs found for those IDs.</p>
-  {% endif %}
+  <div id="results-card-container"></div>
+  <div id="results-list-container" style="display:none;"></div>
 
   <div class="mt-4 text-center">
-    <a href="{{ url_for('index') }}" class="btn btn-main">← New Search</a>
+    <a href="{{ url_for('index') }}" class="btn btn-main">&#8592; New Search</a>
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-  window.FETCHED_JOBS = {{ jobs | tojson }};
-</script>
+<script>window.FETCHED_JOBS = {{ jobs | tojson }};</script>
 <script src="{{ url_for('static', filename='js/history.js') }}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    StatejobsHistory.initResultsPage(window.FETCHED_JOBS);
+    StatejobsHistory.initResultsPage(
+      window.FETCHED_JOBS,
+      'results-card-container',
+      'results-list-container'
+    );
 
     const cardBtn = document.getElementById('btn-card-view');
     const listBtn = document.getElementById('btn-list-view');
     const cardContainer = document.getElementById('results-card-container');
     const listContainer = document.getElementById('results-list-container');
 
-    if (!cardContainer) return;
+    cardBtn.addEventListener('click', () => {
+      cardContainer.style.display = '';
+      listContainer.style.display = 'none';
+      cardBtn.classList.add('active');
+      listBtn.classList.remove('active');
+    });
 
-    // Populate list container from FETCHED_JOBS
-    StatejobsHistory.renderResultsList(window.FETCHED_JOBS, 'results-list-container');
-
-    function setView(mode) {
-      const isCard = mode === 'card';
-      cardContainer.style.display = isCard ? '' : 'none';
-      listContainer.style.display = isCard ? 'none' : '';
-      cardBtn.classList.toggle('active', isCard);
-      listBtn.classList.toggle('active', !isCard);
-      StatejobsHistory.setViewMode(mode);
-    }
-
-    cardBtn.addEventListener('click', () => setView('card'));
-    listBtn.addEventListener('click', () => setView('list'));
-
-    // Default to card view on results page regardless of history preference
-    setView('card');
+    listBtn.addEventListener('click', () => {
+      cardContainer.style.display = 'none';
+      listContainer.style.display = '';
+      listBtn.classList.add('active');
+      cardBtn.classList.remove('active');
+    });
   });
 </script>
 {% endblock %}
