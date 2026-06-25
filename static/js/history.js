@@ -13,12 +13,16 @@
     localStorage.setItem(HISTORY_KEY, JSON.stringify(jobs));
   }
 
+  function isValidJob(job) {
+    return job && job.job_id && job.title;
+  }
+
   function upsertJobs(newJobs) {
     const history = getHistory();
     for (const job of newJobs) {
+      if (!isValidJob(job)) continue;
       const idx = history.findIndex(h => h.job_id === job.job_id);
       if (idx >= 0) {
-        // Refresh scraped data but preserve user state
         history[idx] = { ...job, applied: history[idx].applied, saved_at: history[idx].saved_at };
       } else {
         history.unshift({ ...job, applied: false, saved_at: new Date().toISOString() });
@@ -50,7 +54,7 @@
 
   // --- Rendering helpers ---
 
-  function escapeHtml(str) {
+  function esc(str) {
     if (!str) return 'N/A';
     return String(str)
       .replace(/&/g, '&amp;')
@@ -62,39 +66,42 @@
   function appliedBtnHtml(job_id, applied) {
     const cls = applied ? 'btn-applied' : 'btn-alt';
     const label = applied ? 'Applied' : 'Mark Applied';
-    return `<button class="btn btn-sm ${cls} js-toggle-applied" data-job-id="${job_id}">${label}</button>`;
+    return `<button class="btn btn-sm ${cls} js-toggle-applied" data-job-id="${esc(job_id)}">${label}</button>`;
   }
 
-  function renderJobCard(job) {
+  function renderJobCard(job, showDelete) {
     const addressHtml = job.full_address
-      ? job.full_address.split('\n').filter(Boolean).map(escapeHtml).join('<br>')
+      ? job.full_address.split('\n').filter(Boolean).map(esc).join('<br>')
       : 'N/A';
     const emailHtml = job.email
-      ? `<a href="mailto:${escapeHtml(job.email)}?subject=Vacancy%20%23${escapeHtml(job.job_id)}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached.">${escapeHtml(job.email)}</a>`
+      ? `<a href="mailto:${esc(job.email)}?subject=Vacancy%20%23${esc(job.job_id)}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached.">${esc(job.email)}</a>`
       : 'N/A';
+    const deleteBtn = showDelete
+      ? `<button class="btn btn-sm btn-danger-alt js-delete-job" data-job-id="${esc(job.job_id)}">Remove</button>`
+      : '';
 
     return `
       <div class="col">
         <div class="card-stack-wrapper">
-          <div class="card h-100 shadow-sm history-card" data-job-id="${escapeHtml(job.job_id)}">
+          <div class="card h-100 shadow-sm history-card" data-job-id="${esc(job.job_id)}">
             <div class="card-body">
-              <h5 class="card-title">${escapeHtml(job.title)}</h5>
-              <p class="card-text"><strong>Agency:</strong> ${escapeHtml(job.agency)}</p>
-              <p class="card-text"><strong>Salary Grade:</strong> ${escapeHtml(job.grade)}</p>
-              <p class="card-text"><strong>Salary Range:</strong> ${escapeHtml(job.salary)}</p>
-              <p class="card-text"><strong>Posted:</strong> ${escapeHtml(job.date_posted)}</p>
-              <p class="card-text"><strong>Applications Due:</strong> ${escapeHtml(job.applications_due)}</p>
-              <p class="card-text"><strong>Contact:</strong> ${escapeHtml(job.name)}</p>
+              <h5 class="card-title">${esc(job.title)}</h5>
+              <p class="card-text"><strong>Agency:</strong> ${esc(job.agency)}</p>
+              <p class="card-text"><strong>Salary Grade:</strong> ${esc(job.grade)}</p>
+              <p class="card-text"><strong>Salary Range:</strong> ${esc(job.salary)}</p>
+              <p class="card-text"><strong>Posted:</strong> ${esc(job.date_posted)}</p>
+              <p class="card-text"><strong>Applications Due:</strong> ${esc(job.applications_due)}</p>
+              <p class="card-text"><strong>Contact:</strong> ${esc(job.name)}</p>
               <p class="card-text"><strong>Email:</strong> ${emailHtml}</p>
               <p class="card-text"><strong>Address:</strong><br>${addressHtml}</p>
               <p class="card-text"><strong>Job ID:</strong>
-                <a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id=${escapeHtml(job.job_id)}"
-                   target="_blank" rel="noopener noreferrer">${escapeHtml(job.job_id)}</a>
+                <a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id=${esc(job.job_id)}"
+                   target="_blank" rel="noopener noreferrer">${esc(job.job_id)}</a>
               </p>
               <div class="text-center mt-3 d-flex gap-2 justify-content-center flex-wrap">
-                <a href="/coverletter?job_id=${escapeHtml(job.job_id)}" class="btn btn-main btn-sm">Cover Letter</a>
+                <a href="/coverletter?job_id=${esc(job.job_id)}" class="btn btn-main btn-sm">Cover Letter</a>
                 ${appliedBtnHtml(job.job_id, job.applied)}
-                <button class="btn btn-sm btn-danger-alt js-delete-job" data-job-id="${escapeHtml(job.job_id)}">Remove</button>
+                ${deleteBtn}
               </div>
             </div>
           </div>
@@ -102,35 +109,56 @@
       </div>`;
   }
 
-  function renderJobRow(job) {
+  function renderJobRow(job, showDelete) {
     const statusBadge = job.applied
-      ? '<span class="badge badge-applied">Applied</span>'
-      : '<span class="badge badge-pending">Pending</span>';
+      ? '<span class="status-badge badge-applied">Applied</span>'
+      : '<span class="status-badge badge-pending">Pending</span>';
+    const deleteBtn = showDelete
+      ? `<button class="btn btn-sm btn-danger-alt js-delete-job" data-job-id="${esc(job.job_id)}">Remove</button>`
+      : '';
 
     return `
-      <tr data-job-id="${escapeHtml(job.job_id)}">
-        <td>
-          <a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id=${escapeHtml(job.job_id)}"
-             target="_blank" rel="noopener noreferrer">${escapeHtml(job.job_id)}</a>
-        </td>
-        <td>${escapeHtml(job.title)}</td>
-        <td>${escapeHtml(job.agency)}</td>
-        <td>${escapeHtml(job.grade)}</td>
-        <td>${escapeHtml(job.applications_due)}</td>
+      <tr data-job-id="${esc(job.job_id)}">
+        <td><a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id=${esc(job.job_id)}" target="_blank" rel="noopener noreferrer">${esc(job.job_id)}</a></td>
+        <td>${esc(job.title)}</td>
+        <td>${esc(job.agency)}</td>
+        <td>${esc(job.grade)}</td>
+        <td>${esc(job.applications_due)}</td>
         <td class="js-status-cell">${statusBadge}</td>
         <td>
           <div class="d-flex gap-1 flex-wrap">
-            <a href="/coverletter?job_id=${escapeHtml(job.job_id)}" class="btn btn-main btn-sm">Cover Letter</a>
+            <a href="/coverletter?job_id=${esc(job.job_id)}" class="btn btn-main btn-sm">Cover Letter</a>
             ${appliedBtnHtml(job.job_id, job.applied)}
-            <button class="btn btn-sm btn-danger-alt js-delete-job" data-job-id="${escapeHtml(job.job_id)}">Remove</button>
+            ${deleteBtn}
           </div>
         </td>
       </tr>`;
   }
 
-  // --- Event wiring (shared by history section and results page) ---
+  function tableHtml(rows) {
+    return `
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Job ID</th><th>Title</th><th>Agency</th><th>Grade</th><th>Due</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
 
-  function wireActions(container) {
+  function cardGridHtml(cards) {
+    return `
+      <div class="row row-cols-1 row-cols-lg-2 g-4">
+        ${cards}
+      </div>`;
+  }
+
+  // --- Event delegation ---
+
+  function wireActions(container, showDelete) {
     container.addEventListener('click', (e) => {
       const toggleBtn = e.target.closest('.js-toggle-applied');
       if (toggleBtn) {
@@ -138,27 +166,26 @@
         const applied = toggleApplied(job_id);
         toggleBtn.textContent = applied ? 'Applied' : 'Mark Applied';
         toggleBtn.className = `btn btn-sm ${applied ? 'btn-applied' : 'btn-alt'} js-toggle-applied`;
-        // Sync badge in list row if present
         const row = container.querySelector(`tr[data-job-id="${job_id}"]`);
         if (row) {
           const cell = row.querySelector('.js-status-cell');
           if (cell) {
             cell.innerHTML = applied
-              ? '<span class="badge badge-applied">Applied</span>'
-              : '<span class="badge badge-pending">Pending</span>';
+              ? '<span class="status-badge badge-applied">Applied</span>'
+              : '<span class="status-badge badge-pending">Pending</span>';
           }
         }
         return;
       }
+
+      if (!showDelete) return;
 
       const deleteBtn = e.target.closest('.js-delete-job');
       if (deleteBtn) {
         const job_id = deleteBtn.dataset.jobId;
         deleteJob(job_id);
         const card = container.querySelector(`.history-card[data-job-id="${job_id}"]`);
-        if (card) {
-          (card.closest('.col') || card).remove();
-        }
+        if (card) (card.closest('.col') || card).remove();
         const row = container.querySelector(`tr[data-job-id="${job_id}"]`);
         if (row) row.remove();
         if (getHistory().length === 0) {
@@ -169,10 +196,10 @@
   }
 
   function emptyStateHtml() {
-    return '<p class="text-secondary text-center py-3">No saved jobs yet. Search for vacancy IDs above to get started.</p>';
+    return '<p class="text-secondary text-center py-4">No saved jobs yet. Search for vacancy IDs to get started.</p>';
   }
 
-  // --- Public render for index page history section ---
+  // --- Public: history page ---
 
   function renderHistorySection(containerId) {
     const container = document.getElementById(containerId);
@@ -187,63 +214,63 @@
     }
 
     if (mode === 'card') {
-      container.innerHTML = `
-        <div class="container-fluid px-2" style="max-width:90%;">
-          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center">
-            ${history.map(renderJobCard).join('')}
-          </div>
-        </div>`;
+      container.innerHTML = cardGridHtml(history.map(j => renderJobCard(j, true)).join(''));
     } else {
-      container.innerHTML = `
-        <div class="table-responsive">
-          <table class="table table-history">
-            <thead>
-              <tr>
-                <th>Job ID</th>
-                <th>Title</th>
-                <th>Agency</th>
-                <th>Grade</th>
-                <th>Due</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${history.map(renderJobRow).join('')}
-            </tbody>
-          </table>
-        </div>`;
+      container.innerHTML = tableHtml(history.map(j => renderJobRow(j, true)).join(''));
     }
 
-    wireActions(container);
+    wireActions(container, true);
   }
 
-  // --- Results page: save jobs + wire applied toggle on server-rendered cards ---
+  // --- Public: results page list view ---
+
+  function renderResultsList(jobs, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const history = getHistory();
+    const enriched = jobs.map(j => {
+      const saved = history.find(h => h.job_id === j.job_id);
+      return { ...j, applied: saved ? saved.applied : false };
+    });
+
+    container.innerHTML = tableHtml(enriched.map(j => renderJobRow(j, false)).join(''));
+    wireActions(container, false);
+  }
+
+  // --- Public: results page init ---
 
   function initResultsPage(jobs) {
     upsertJobs(jobs);
     const history = getHistory();
 
-    // Add applied toggle buttons to each server-rendered card
-    document.querySelectorAll('[data-job-id]').forEach(card => {
+    // Inject applied toggle into each server-rendered card
+    document.querySelectorAll('.result-card').forEach(card => {
       const job_id = card.dataset.jobId;
       const saved = history.find(h => h.job_id === job_id);
-      const actionRow = card.querySelector('.result-card-actions');
-      if (!actionRow || !saved) return;
+      const actionsDiv = card.querySelector('.result-card-actions');
+      if (!actionsDiv) return;
 
       const btn = document.createElement('button');
-      btn.className = `btn btn-sm ${saved.applied ? 'btn-applied' : 'btn-alt'} js-toggle-applied`;
+      const applied = saved ? saved.applied : false;
+      btn.className = `btn btn-sm ${applied ? 'btn-applied' : 'btn-alt'} js-toggle-applied`;
       btn.dataset.jobId = job_id;
-      btn.textContent = saved.applied ? 'Applied' : 'Mark Applied';
-      actionRow.appendChild(btn);
+      btn.textContent = applied ? 'Applied' : 'Mark Applied';
+      actionsDiv.appendChild(btn);
     });
 
-    // Wire actions — delegate from results container or document body
-    const resultsContainer = document.getElementById('results-container');
-    wireActions(resultsContainer || document.body);
+    const cardContainer = document.getElementById('results-card-container');
+    if (cardContainer) wireActions(cardContainer, false);
   }
 
-  // --- Expose public API ---
+  // --- Expose ---
 
-  window.StatejobsHistory = { upsertJobs, renderHistorySection, initResultsPage, getViewMode, setViewMode };
+  window.StatejobsHistory = {
+    upsertJobs,
+    getViewMode,
+    setViewMode,
+    renderHistorySection,
+    renderResultsList,
+    initResultsPage,
+  };
 })();

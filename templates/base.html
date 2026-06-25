@@ -12,8 +12,16 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-  <header class="container text-center py-4 mb-4 border-bottom position-relative">
-    <h1><a href="{{ url_for('index') }}" class="text-decoration-none">StateJobs Helper</a></h1>
+  <header class="container py-4 mb-4 border-bottom">
+    <div class="d-flex align-items-center justify-content-between">
+      <div style="width:120px;"></div>
+      <h1 class="mb-0 text-center flex-grow-1">
+        <a href="{{ url_for('index') }}" class="text-decoration-none">StateJobs Helper</a>
+      </h1>
+      <nav style="width:120px;" class="text-end">
+        <a href="{{ url_for('history') }}" class="nav-link-pill">History</a>
+      </nav>
+    </div>
   </header>
 
   {% block content %}{% endblock %}
