@@ -245,12 +245,59 @@ a:hover {
 }
 
 /* ===========================================================
+    HEADER NAV
+    =========================================================== */
+
+.nav-link-pill {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--ctp-border);
+  border-radius: 2rem;
+  color: var(--ctp-text);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.nav-link-pill:hover {
+  border-color: var(--ctp-accent);
+  color: var(--ctp-accent);
+  background-color: rgba(249, 226, 175, 0.08);
+}
+
+/* ===========================================================
+    VIEW TOGGLE BUTTONS
+    =========================================================== */
+
+.view-toggle-btn {
+  background-color: var(--ctp-card-surface);
+  color: var(--ctp-subtext);
+  border: 1px solid var(--ctp-border);
+  min-width: 0;
+  padding: 0.3rem 0.55rem;
+  line-height: 1;
+}
+
+.view-toggle-btn:hover {
+  background-color: var(--ctp-surface);
+  color: var(--ctp-text);
+  border-color: var(--ctp-accent);
+}
+
+.view-toggle-btn.active {
+  background-color: var(--ctp-surface);
+  color: var(--ctp-accent);
+  border-color: var(--ctp-accent);
+}
+
+/* ===========================================================
     STATUS BADGES
     =========================================================== */
 
-.badge {
+.status-badge {
   display: inline-block;
-  padding: 0.25em 0.55em;
+  padding: 0.25em 0.6em;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 0.3rem;
@@ -258,13 +305,13 @@ a:hover {
 }
 
 .badge-applied {
-  background-color: rgba(166, 227, 161, 0.2);
+  background-color: rgba(166, 227, 161, 0.15);
   color: #a6e3a1;
-  border: 1px solid #a6e3a1;
+  border: 1px solid rgba(166, 227, 161, 0.5);
 }
 
 .badge-pending {
-  background-color: rgba(166, 173, 200, 0.15);
+  background-color: rgba(166, 173, 200, 0.1);
   color: var(--ctp-subtext);
   border: 1px solid var(--ctp-border);
 }
@@ -273,32 +320,49 @@ a:hover {
     HISTORY TABLE (LIST VIEW)
     =========================================================== */
 
-.table-history {
+.history-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--ctp-border);
+  border-radius: 0.5rem;
+  background-color: var(--ctp-card-surface);
+}
+
+.history-table {
   width: 100%;
   border-collapse: collapse;
+  background-color: transparent;
   color: var(--ctp-text);
 }
 
-.table-history thead th {
+.history-table thead th {
+  background-color: var(--ctp-surface);
   color: var(--ctp-accent);
   border-bottom: 1px solid var(--ctp-border);
-  padding: 0.6rem 0.75rem;
+  padding: 0.65rem 0.85rem;
   font-weight: 600;
   white-space: nowrap;
+  text-align: left;
 }
 
-.table-history tbody tr {
+.history-table tbody tr {
   border-bottom: 1px solid var(--ctp-border);
-  transition: background-color 0.15s ease;
+  background-color: transparent;
+  transition: background-color 0.12s ease;
 }
 
-.table-history tbody tr:hover {
+.history-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.history-table tbody tr:hover {
   background-color: var(--ctp-surface);
 }
 
-.table-history td {
-  padding: 0.55rem 0.75rem;
+.history-table td {
+  padding: 0.6rem 0.85rem;
   vertical-align: middle;
+  color: var(--ctp-text);
+  background-color: transparent;
 }
 
 /* ===========================================================

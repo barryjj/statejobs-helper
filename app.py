@@ -24,7 +24,7 @@ def index():
 
         for job_id in job_ids:
             job_data = get_job_data(job_id)
-            if job_data:
+            if job_data and job_data.get("title"):
                 results.append(job_data)
 
         return render_template("results.html", jobs=results)
@@ -126,6 +126,12 @@ def download_pdf():
         download_name=pdf_filename,
         mimetype="application/pdf",
     )
+
+
+@app.route("/history")
+def history():
+    """Render the job history page (populated client-side from localStorage)."""
+    return render_template("history.html")
 
 
 if __name__ == "__main__":
