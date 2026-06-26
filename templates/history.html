@@ -22,7 +22,18 @@
     </div>
   </div>
 
-  <div id="history-container"></div>
+  <div id="history-card-view">
+    <div class="sj-card-stage" id="history-card-stage"></div>
+    <div class="sj-nav" id="history-card-nav">
+      <button class="sj-nav__btn sj-nav__prev">&#8249;</button>
+      <div class="sj-nav__dots"></div>
+      <button class="sj-nav__btn sj-nav__next">&#8250;</button>
+    </div>
+  </div>
+
+  <div id="history-list-view" style="display:none;">
+    <div id="history-list-container"></div>
+  </div>
 </div>
 {% endblock %}
 
@@ -34,15 +45,22 @@
     const listBtn = document.getElementById('btn-list-view');
     const clearBtn = document.getElementById('btn-clear-history');
 
-    function setActiveBtn(mode) {
-      cardBtn.classList.toggle('active', mode === 'card');
-      listBtn.classList.toggle('active', mode === 'list');
+    const cardView = document.getElementById('history-card-view');
+    const listView = document.getElementById('history-list-view');
+
+    function setView(mode) {
+      const isCard = mode === 'card';
+      cardView.style.display = isCard ? '' : 'none';
+      listView.style.display = isCard ? 'none' : '';
+      cardBtn.classList.toggle('active', isCard);
+      listBtn.classList.toggle('active', !isCard);
+      StatejobsHistory.setViewMode(mode);
     }
 
     function render() {
       const mode = StatejobsHistory.getViewMode();
-      setActiveBtn(mode);
-      StatejobsHistory.renderHistorySection('history-container');
+      StatejobsHistory.renderHistorySection('history-card-stage', 'history-card-nav', 'history-list-container');
+      setView(mode);
     }
 
     cardBtn.addEventListener('click', () => { StatejobsHistory.setViewMode('card'); render(); });

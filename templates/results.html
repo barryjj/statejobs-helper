@@ -5,26 +5,34 @@
 <div class="page-container">
   <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <h2 class="mb-0">Results</h2>
-    <div class="d-flex align-items-center gap-2">
-      <div class="btn-group" role="group">
-        <button id="btn-card-view" class="btn btn-sm view-toggle-btn active" title="Card view">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
-          </svg>
-        </button>
-        <button id="btn-list-view" class="btn btn-sm view-toggle-btn" title="List view">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
-          </svg>
-        </button>
-      </div>
+    <div class="btn-group" role="group">
+      <button id="btn-card-view" class="btn btn-sm view-toggle-btn active" title="Card view">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
+        </svg>
+      </button>
+      <button id="btn-list-view" class="btn btn-sm view-toggle-btn" title="List view">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <div id="results-card-container"></div>
-  <div id="results-list-container" style="display:none;"></div>
+  <div id="results-card-view">
+    <div class="sj-card-stage" id="results-card-stage"></div>
+    <div class="sj-nav" id="results-card-nav">
+      <button class="sj-nav__btn sj-nav__prev">&#8249;</button>
+      <div class="sj-nav__dots"></div>
+      <button class="sj-nav__btn sj-nav__next">&#8250;</button>
+    </div>
+  </div>
 
-  <div class="mt-4 text-center">
+  <div id="results-list-view" style="display:none;">
+    <div id="results-list-container"></div>
+  </div>
+
+  <div class="mt-5 text-center">
     <a href="{{ url_for('index') }}" class="btn btn-main">&#8592; New Search</a>
   </div>
 </div>
@@ -37,25 +45,26 @@
   document.addEventListener('DOMContentLoaded', () => {
     StatejobsHistory.initResultsPage(
       window.FETCHED_JOBS,
-      'results-card-container',
+      'results-card-stage',
+      'results-card-nav',
       'results-list-container'
     );
 
     const cardBtn = document.getElementById('btn-card-view');
     const listBtn = document.getElementById('btn-list-view');
-    const cardContainer = document.getElementById('results-card-container');
-    const listContainer = document.getElementById('results-list-container');
+    const cardView = document.getElementById('results-card-view');
+    const listView = document.getElementById('results-list-view');
 
     cardBtn.addEventListener('click', () => {
-      cardContainer.style.display = '';
-      listContainer.style.display = 'none';
+      cardView.style.display = '';
+      listView.style.display = 'none';
       cardBtn.classList.add('active');
       listBtn.classList.remove('active');
     });
 
     listBtn.addEventListener('click', () => {
-      cardContainer.style.display = 'none';
-      listContainer.style.display = '';
+      cardView.style.display = 'none';
+      listView.style.display = '';
       listBtn.classList.add('active');
       cardBtn.classList.remove('active');
     });

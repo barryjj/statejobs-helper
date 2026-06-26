@@ -176,81 +176,137 @@ a:hover {
 
 
 /* ===========================================================
-    CARD DECK NAVIGATOR
+    CARD STACK (CGT-style)
     =========================================================== */
 
-.card-deck-layout {
+.sj-card-stage {
+  position: relative;
+  height: 500px;
   display: flex;
-  align-items: center;
-  gap: 1.25rem;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: visible;
 }
 
-.card-deck-stage {
-  flex: 1;
-  position: relative;
-  /* Room for the peek cards below/behind */
-  padding-bottom: 18px;
-}
-
-.deck-peek {
+.sj-card {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 0.6rem;
+  width: 600px;
+  max-width: calc(100vw - 6rem);
+  background: var(--ctp-card-surface);
   border: 1px solid var(--ctp-border);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform, opacity;
+  top: 0;
+  left: 50%;
+  margin-left: -300px;
 }
 
-.deck-peek-1 {
-  top: 8px;
-  left: 0;
-  background-color: var(--ctp-surface);
-  z-index: 0;
+@media (max-width: 680px) {
+  .sj-card { margin-left: 0; left: 1.5rem; right: 1.5rem; width: auto; }
 }
 
-.deck-peek-2 {
-  top: 16px;
-  left: 0;
-  background-color: var(--ctp-base);
-  z-index: -1;
+.sj-card--active {
+  transform: translateY(0) scale(1) rotate(0deg);
+  opacity: 1;
+  z-index: 10;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
 }
 
-.card-deck-stage .card {
-  position: relative;
+.sj-card--prev {
+  transform: translateX(-18px) translateY(10px) scale(0.97) rotate(-1.5deg);
+  opacity: 0.35;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.sj-card--next {
+  transform: translateX(18px) translateY(10px) scale(0.97) rotate(1.5deg);
+  opacity: 0.35;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.sj-card--far-prev {
+  transform: translateX(-30px) translateY(18px) scale(0.93) rotate(-3deg);
+  opacity: 0.15;
   z-index: 1;
+  pointer-events: none;
 }
 
-.deck-nav-btn {
-  flex-shrink: 0;
-  width: 2.75rem;
-  height: 2.75rem;
+.sj-card--far-next {
+  transform: translateX(30px) translateY(18px) scale(0.93) rotate(3deg);
+  opacity: 0.15;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.sj-card--hidden {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transform: translateX(30px) translateY(18px) scale(0.93) rotate(3deg);
+}
+
+.sj-card__body {
+  padding: 1.25rem 1.5rem;
+}
+
+/* Chevron + dots nav */
+.sj-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--ctp-card-surface);
-  color: var(--ctp-accent);
-  border: 1px solid var(--ctp-border);
-  border-radius: 50%;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
-.deck-nav-btn:hover:not(:disabled) {
-  background-color: var(--ctp-surface);
+.sj-nav__btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid var(--ctp-border);
+  background: var(--ctp-card-surface);
+  color: var(--ctp-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sj-nav__btn:hover {
+  background: var(--ctp-surface);
   border-color: var(--ctp-accent);
 }
 
-.deck-nav-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
+.sj-nav__dots {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.25rem;
+  flex-wrap: wrap;
+  max-width: 300px;
+  justify-content: center;
 }
 
-.deck-counter {
-  text-align: center;
-  margin-top: 0.75rem;
-  color: var(--ctp-subtext);
-  font-size: 0.875rem;
+.sj-nav__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ctp-border);
+  transition: background 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sj-nav__dot--active {
+  background: var(--ctp-accent);
+  transform: scale(1.35);
 }
 
 /* ===========================================================
