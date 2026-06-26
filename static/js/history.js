@@ -217,9 +217,6 @@
     if (jobs.length === 0) { container.innerHTML = emptyStateHtml(); return; }
 
     const rowHtml = jobs.map(job => {
-      const statusBadge = job.applied
-        ? '<span class="status-badge badge-applied">Applied</span>'
-        : '<span class="status-badge badge-pending">Pending</span>';
       const appliedCls = job.applied ? 'btn-applied' : 'btn-alt';
       const appliedLabel = job.applied ? 'Applied' : 'Mark Applied';
       const deleteBtn = showDelete
@@ -233,7 +230,6 @@
           <td>${esc(job.agency)}</td>
           <td>${esc(job.grade)}</td>
           <td>${esc(job.applications_due)}</td>
-          <td class="js-status-cell">${statusBadge}</td>
           <td>
             <div class="d-flex gap-1 flex-wrap">
               <a href="/coverletter?job_id=${esc(job.job_id)}" class="btn btn-main btn-sm">Cover Letter</a>
@@ -248,7 +244,7 @@
       <div class="history-table-wrap">
         <table class="history-table">
           <thead>
-            <tr><th>Job ID</th><th>Title</th><th>Agency</th><th>Grade</th><th>Due</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>Job ID</th><th>Title</th><th>Agency</th><th>Grade</th><th>Due</th><th>Actions</th></tr>
           </thead>
           <tbody>${rowHtml}</tbody>
         </table>
@@ -261,13 +257,6 @@
         const applied = toggleApplied(job_id);
         toggleBtn.textContent = applied ? 'Applied' : 'Mark Applied';
         toggleBtn.className = `btn btn-sm ${applied ? 'btn-applied' : 'btn-alt'} js-toggle-applied`;
-        const row = container.querySelector(`tr[data-job-id="${job_id}"]`);
-        if (row) {
-          const cell = row.querySelector('.js-status-cell');
-          if (cell) cell.innerHTML = applied
-            ? '<span class="status-badge badge-applied">Applied</span>'
-            : '<span class="status-badge badge-pending">Pending</span>';
-        }
         return;
       }
       if (!showDelete) return;
