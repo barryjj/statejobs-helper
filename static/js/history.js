@@ -56,18 +56,51 @@
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function mailtoHref(job) {
+    return `mailto:${esc(job.email)}?subject=Vacancy%20%23${esc(job.job_id)}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached.`;
+  }
+
+  function matchesSearch(job, term) {
+    if (!term) return true;
+    const haystack = `${job.job_id} ${job.title} ${job.agency}`.toLowerCase();
+    return haystack.includes(term.toLowerCase());
+  }
+
+  // Compact icon-button action row shared by card and list views
+  function actionIconsHtml(job, showDelete) {
+    const appliedCls = job.applied ? 'icon-btn--applied' : '';
+    const appliedTitle = job.applied ? 'Applied — click to unmark' : 'Mark Applied';
+    const emailBtn = job.email
+      ? `<a href="${mailtoHref(job)}" class="icon-btn" title="Email contact">
+           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/></svg>
+         </a>`
+      : `<span class="icon-btn icon-btn--disabled" title="No email on file">
+           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/></svg>
+         </span>`;
+    const deleteBtn = showDelete
+      ? `<button class="icon-btn icon-btn--danger js-delete-job" data-job-id="${esc(job.job_id)}" title="Remove from history">
+           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3V2h11v1h-11Z"/></svg>
+         </button>`
+      : '';
+
+    return `
+      <a href="/coverletter?job_id=${esc(job.job_id)}" class="icon-btn icon-btn--main" title="Generate cover letter">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2Zm5.5 1.5v2a1 1 0 0 0 1 1h2l-3-3ZM4.5 9a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1h-7Zm0 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4Z"/></svg>
+      </a>
+      ${emailBtn}
+      <button class="icon-btn ${appliedCls} js-toggle-applied" data-job-id="${esc(job.job_id)}" title="${appliedTitle}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0Z"/></svg>
+      </button>
+      ${deleteBtn}`;
+  }
+
   function cardHtml(job, showDelete) {
     const addressHtml = job.full_address
       ? job.full_address.split('\n').filter(Boolean).map(esc).join('<br>')
       : 'N/A';
     const emailHtml = job.email
-      ? `<a href="mailto:${esc(job.email)}?subject=Vacancy%20%23${esc(job.job_id)}&body=Please%20find%20my%20resume%20and%20cover%20letter%20attached.">${esc(job.email)}</a>`
+      ? `<a href="${mailtoHref(job)}">${esc(job.email)}</a>`
       : 'N/A';
-    const appliedCls = job.applied ? 'btn-applied' : 'btn-alt';
-    const appliedLabel = job.applied ? 'Applied' : 'Mark Applied';
-    const deleteBtn = showDelete
-      ? `<button class="btn btn-sm btn-danger-alt js-delete-job" data-job-id="${esc(job.job_id)}">Remove</button>`
-      : '';
 
     return `
       <div class="sj-card sj-card--hidden" data-job-id="${esc(job.job_id)}">
@@ -85,10 +118,8 @@
             <a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id=${esc(job.job_id)}"
                target="_blank" rel="noopener noreferrer">${esc(job.job_id)}</a>
           </p>
-          <div class="mt-3 d-flex gap-2 justify-content-center flex-wrap">
-            <a href="/coverletter?job_id=${esc(job.job_id)}" class="btn btn-main btn-sm">Cover Letter</a>
-            <button class="btn btn-sm ${appliedCls} js-toggle-applied" data-job-id="${esc(job.job_id)}">${appliedLabel}</button>
-            ${deleteBtn}
+          <div class="mt-3 d-flex gap-2 justify-content-center">
+            ${actionIconsHtml(job, showDelete)}
           </div>
         </div>
       </div>`;
@@ -172,8 +203,8 @@
       if (toggleBtn) {
         const job_id = toggleBtn.dataset.jobId;
         const applied = toggleApplied(job_id);
-        toggleBtn.textContent = applied ? 'Applied' : 'Mark Applied';
-        toggleBtn.className = `btn btn-sm ${applied ? 'btn-applied' : 'btn-alt'} js-toggle-applied`;
+        toggleBtn.classList.toggle('icon-btn--applied', applied);
+        toggleBtn.title = applied ? 'Applied — click to unmark' : 'Mark Applied';
         return;
       }
 
@@ -216,14 +247,7 @@
 
     if (jobs.length === 0) { container.innerHTML = emptyStateHtml(); return; }
 
-    const rowHtml = jobs.map(job => {
-      const appliedCls = job.applied ? 'btn-applied' : 'btn-alt';
-      const appliedLabel = job.applied ? 'Applied' : 'Mark Applied';
-      const deleteBtn = showDelete
-        ? `<button class="btn btn-sm btn-danger-alt js-delete-job" data-job-id="${esc(job.job_id)}">Remove</button>`
-        : '';
-
-      return `
+    const rowHtml = jobs.map(job => `
         <tr data-job-id="${esc(job.job_id)}">
           <td><a href="https://statejobs.ny.gov/public/vacancyDetailsView.cfm?id=${esc(job.job_id)}" target="_blank" rel="noopener noreferrer">${esc(job.job_id)}</a></td>
           <td>${esc(job.title)}</td>
@@ -231,14 +255,11 @@
           <td>${esc(job.grade)}</td>
           <td>${esc(job.applications_due)}</td>
           <td>
-            <div class="d-flex gap-1 flex-wrap">
-              <a href="/coverletter?job_id=${esc(job.job_id)}" class="btn btn-main btn-sm">Cover Letter</a>
-              <button class="btn btn-sm ${appliedCls} js-toggle-applied" data-job-id="${esc(job.job_id)}">${appliedLabel}</button>
-              ${deleteBtn}
+            <div class="d-flex gap-1">
+              ${actionIconsHtml(job, showDelete)}
             </div>
           </td>
-        </tr>`;
-    }).join('');
+        </tr>`).join('');
 
     container.innerHTML = `
       <div class="history-table-wrap">
@@ -255,8 +276,8 @@
       if (toggleBtn) {
         const job_id = toggleBtn.dataset.jobId;
         const applied = toggleApplied(job_id);
-        toggleBtn.textContent = applied ? 'Applied' : 'Mark Applied';
-        toggleBtn.className = `btn btn-sm ${applied ? 'btn-applied' : 'btn-alt'} js-toggle-applied`;
+        toggleBtn.classList.toggle('icon-btn--applied', applied);
+        toggleBtn.title = applied ? 'Applied — click to unmark' : 'Mark Applied';
         return;
       }
       if (!showDelete) return;
@@ -276,8 +297,8 @@
 
   // --- Public: history page ---
 
-  function renderHistorySection(cardStageId, cardNavId, listContainerId) {
-    const history = getHistory();
+  function renderHistorySection(cardStageId, cardNavId, listContainerId, searchTerm) {
+    const history = getHistory().filter(j => matchesSearch(j, searchTerm));
     const mode = getViewMode();
     if (mode === 'card') {
       renderCardStack(history, cardStageId, cardNavId, true);

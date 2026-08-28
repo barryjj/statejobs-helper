@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="page-container">
-  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <h2 class="mb-0">Job History</h2>
     <div class="d-flex align-items-center gap-2">
       <div class="btn-group" role="group" aria-label="View mode">
@@ -20,6 +20,10 @@
       </div>
       <button id="btn-clear-history" class="btn btn-sm btn-danger-alt">Clear All</button>
     </div>
+  </div>
+
+  <div class="mb-4">
+    <input type="text" id="history-search" class="form-control" placeholder="Search by title, agency, or job ID…">
   </div>
 
   <div id="history-card-view">
@@ -44,6 +48,7 @@
     const cardBtn = document.getElementById('btn-card-view');
     const listBtn = document.getElementById('btn-list-view');
     const clearBtn = document.getElementById('btn-clear-history');
+    const searchInput = document.getElementById('history-search');
 
     const cardView = document.getElementById('history-card-view');
     const listView = document.getElementById('history-list-view');
@@ -59,12 +64,16 @@
 
     function render() {
       const mode = StatejobsHistory.getViewMode();
-      StatejobsHistory.renderHistorySection('history-card-stage', 'history-card-nav', 'history-list-container');
+      StatejobsHistory.renderHistorySection(
+        'history-card-stage', 'history-card-nav', 'history-list-container',
+        searchInput.value.trim()
+      );
       setView(mode);
     }
 
     cardBtn.addEventListener('click', () => { StatejobsHistory.setViewMode('card'); render(); });
     listBtn.addEventListener('click', () => { StatejobsHistory.setViewMode('list'); render(); });
+    searchInput.addEventListener('input', render);
 
     clearBtn.addEventListener('click', () => {
       if (confirm('Remove all saved jobs from history?')) {

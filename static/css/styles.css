@@ -351,6 +351,70 @@ a:hover {
 }
 
 /* ===========================================================
+    ICON ACTION BUTTONS (compact — card + list actions)
+    =========================================================== */
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 0.4rem;
+  background-color: var(--ctp-card-surface);
+  color: var(--ctp-subtext);
+  border: 1px solid var(--ctp-border);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background-color: var(--ctp-surface);
+  color: var(--ctp-accent);
+  border-color: var(--ctp-accent);
+}
+
+.icon-btn--main {
+  color: var(--ctp-accent);
+  border-color: var(--ctp-accent);
+}
+
+.icon-btn--main:hover {
+  background-color: rgba(249, 226, 175, 0.15);
+  color: var(--ctp-accent);
+}
+
+.icon-btn--applied {
+  color: #a6e3a1;
+  border-color: #a6e3a1;
+  background-color: rgba(166, 227, 161, 0.12);
+}
+
+.icon-btn--applied:hover {
+  background-color: rgba(166, 227, 161, 0.2);
+  color: #a6e3a1;
+  border-color: #a6e3a1;
+}
+
+.icon-btn--danger {
+  color: #f38ba8;
+}
+
+.icon-btn--danger:hover {
+  background-color: rgba(243, 139, 168, 0.15);
+  color: #f38ba8;
+  border-color: #f38ba8;
+}
+
+.icon-btn--disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ===========================================================
     HEADER NAV
     =========================================================== */
 
@@ -454,6 +518,10 @@ a:hover {
   border-bottom: 1px solid var(--ctp-border);
   background-color: transparent;
   transition: background-color 0.12s ease;
+}
+
+.history-table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
 .history-table tbody tr:last-child {
