@@ -37,6 +37,9 @@
     if (idx < 0) return false;
     history[idx].applied = !history[idx].applied;
     saveHistory(history);
+    // Let the page refresh filter counts without a full re-render — the row
+    // stays put until the next render so the click doesn't yank it away.
+    document.dispatchEvent(new CustomEvent('statejobs:applied-changed'));
     return history[idx].applied;
   }
 
@@ -64,6 +67,21 @@
     if (!term) return true;
     const haystack = `${job.job_id} ${job.title} ${job.agency}`.toLowerCase();
     return haystack.includes(term.toLowerCase());
+  }
+
+  // filter: 'all' | 'applied' | 'not-applied'
+  function matchesAppliedFilter(job, filter) {
+    if (filter === 'applied') return !!job.applied;
+    if (filter === 'not-applied') return !job.applied;
+    return true;
+  }
+
+  // Counts for the filter chips — always over the search-filtered set,
+  // never the applied-filtered one, or the numbers move as you click.
+  function getCounts(searchTerm) {
+    const matched = getHistory().filter(j => matchesSearch(j, searchTerm));
+    const applied = matched.filter(j => j.applied).length;
+    return { all: matched.length, applied, notApplied: matched.length - applied };
   }
 
   // Compact icon-button action row shared by card and list views
@@ -291,14 +309,22 @@
     });
   }
 
+  // Distinguishes "history is empty" from "your filters matched nothing".
+  let _filtersActive = false;
+
   function emptyStateHtml() {
-    return '<p class="text-secondary text-center py-4">No saved jobs yet. Search for vacancy IDs to get started.</p>';
+    return _filtersActive
+      ? '<p class="text-secondary text-center py-4">No jobs match the current search or filter.</p>'
+      : '<p class="text-secondary text-center py-4">No saved jobs yet. Search for vacancy IDs to get started.</p>';
   }
 
   // --- Public: history page ---
 
-  function renderHistorySection(cardStageId, cardNavId, listContainerId, searchTerm) {
-    const history = getHistory().filter(j => matchesSearch(j, searchTerm));
+  function renderHistorySection(cardStageId, cardNavId, listContainerId, searchTerm, appliedFilter) {
+    _filtersActive = !!searchTerm || (appliedFilter && appliedFilter !== 'all');
+    const history = getHistory()
+      .filter(j => matchesSearch(j, searchTerm))
+      .filter(j => matchesAppliedFilter(j, appliedFilter));
     const mode = getViewMode();
     if (mode === 'card') {
       renderCardStack(history, cardStageId, cardNavId, true);
@@ -321,7 +347,7 @@
   }
 
   window.StatejobsHistory = {
-    upsertJobs, getViewMode, setViewMode,
+    upsertJobs, getViewMode, setViewMode, getCounts,
     renderHistorySection, initResultsPage,
   };
 })();

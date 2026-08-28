@@ -22,8 +22,13 @@
     </div>
   </div>
 
-  <div class="mb-4">
-    <input type="text" id="history-search" class="form-control" placeholder="Search by title, agency, or job ID…">
+  <div class="d-flex align-items-center gap-3 flex-wrap mb-4">
+    <input type="text" id="history-search" class="form-control" placeholder="Search by title, agency, or job ID…" style="flex:1;min-width:240px;">
+    <div class="filter-chips" id="applied-filter">
+      <button class="filter-chip active" data-filter="all">All <span class="filter-chip__count" id="count-all">0</span></button>
+      <button class="filter-chip" data-filter="applied">Applied <span class="filter-chip__count" id="count-applied">0</span></button>
+      <button class="filter-chip" data-filter="not-applied">Not applied <span class="filter-chip__count" id="count-not-applied">0</span></button>
+    </div>
   </div>
 
   <div id="history-card-view">
@@ -49,6 +54,8 @@
     const listBtn = document.getElementById('btn-list-view');
     const clearBtn = document.getElementById('btn-clear-history');
     const searchInput = document.getElementById('history-search');
+    const filterBar = document.getElementById('applied-filter');
+    let appliedFilter = 'all';
 
     const cardView = document.getElementById('history-card-view');
     const listView = document.getElementById('history-list-view');
@@ -64,16 +71,35 @@
 
     function render() {
       const mode = StatejobsHistory.getViewMode();
+      const term = searchInput.value.trim();
       StatejobsHistory.renderHistorySection(
         'history-card-stage', 'history-card-nav', 'history-list-container',
-        searchInput.value.trim()
+        term, appliedFilter
       );
+      refreshCounts();
       setView(mode);
+    }
+
+    function refreshCounts() {
+      const counts = StatejobsHistory.getCounts(searchInput.value.trim());
+      document.getElementById('count-all').textContent = counts.all;
+      document.getElementById('count-applied').textContent = counts.applied;
+      document.getElementById('count-not-applied').textContent = counts.notApplied;
     }
 
     cardBtn.addEventListener('click', () => { StatejobsHistory.setViewMode('card'); render(); });
     listBtn.addEventListener('click', () => { StatejobsHistory.setViewMode('list'); render(); });
     searchInput.addEventListener('input', render);
+    document.addEventListener('statejobs:applied-changed', refreshCounts);
+
+    filterBar.addEventListener('click', (e) => {
+      const chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      appliedFilter = chip.dataset.filter;
+      filterBar.querySelectorAll('.filter-chip')
+        .forEach(c => c.classList.toggle('active', c === chip));
+      render();
+    });
 
     clearBtn.addEventListener('click', () => {
       if (confirm('Remove all saved jobs from history?')) {

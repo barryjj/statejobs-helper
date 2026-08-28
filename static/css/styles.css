@@ -415,6 +415,52 @@ a:hover {
 }
 
 /* ===========================================================
+    FILTER CHIPS
+    =========================================================== */
+
+.filter-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--ctp-border);
+  border-radius: 2rem;
+  background-color: var(--ctp-card-surface);
+  color: var(--ctp-subtext);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.filter-chip:hover {
+  background-color: var(--ctp-surface);
+  color: var(--ctp-text);
+  border-color: var(--ctp-accent);
+}
+
+.filter-chip.active {
+  background-color: var(--ctp-surface);
+  color: var(--ctp-accent);
+  border-color: var(--ctp-accent);
+}
+
+.filter-chip__count {
+  font-size: 0.7rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 1rem;
+  background-color: rgba(255, 255, 255, 0.07);
+  color: inherit;
+}
+
+/* ===========================================================
     HEADER NAV
     =========================================================== */
 
