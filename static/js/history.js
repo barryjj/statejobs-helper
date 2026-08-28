@@ -145,7 +145,7 @@
 
   // --- Card stack renderer ---
 
-  function renderCardStack(jobs, stageId, navId, showDelete) {
+  function renderCardStack(jobs, stageId, navId, showDelete, stillMatches) {
     const stage = document.getElementById(stageId);
     const navEl = document.getElementById(navId);
     if (!stage) return;
@@ -215,6 +215,25 @@
       navEl.querySelector('.sj-nav__next')?.addEventListener('click', () => nav(1));
     }
 
+    // Pull one card out of the stack in place, keeping the reader's position
+    // rather than re-rendering and snapping back to the first card.
+    function removeCard(job_id) {
+      const cardEl = stage.querySelector(`.sj-card[data-job-id="${job_id}"]`);
+      if (!cardEl) return;
+      const idx = cards.indexOf(cardEl);
+      cards.splice(idx, 1);
+      cardEl.remove();
+      const dots = navEl ? navEl.querySelectorAll('.sj-nav__dot') : [];
+      if (dots[idx]) dots[idx].remove();
+      if (cards.length === 0) {
+        stage.innerHTML = emptyStateHtml();
+        if (navEl) navEl.style.display = 'none';
+        return;
+      }
+      if (navEl) navEl.style.display = cards.length > 1 ? '' : 'none';
+      show(Math.min(current, cards.length - 1));
+    }
+
     // Wire card action buttons via delegation on stage
     stage.addEventListener('click', (e) => {
       const toggleBtn = e.target.closest('.js-toggle-applied');
@@ -223,6 +242,8 @@
         const applied = toggleApplied(job_id);
         toggleBtn.classList.toggle('icon-btn--applied', applied);
         toggleBtn.title = applied ? 'Applied — click to unmark' : 'Mark Applied';
+        // If it no longer belongs under the active filter, let it go.
+        if (stillMatches && !stillMatches({ applied })) removeCard(job_id);
         return;
       }
 
@@ -231,21 +252,7 @@
       if (deleteBtn) {
         const job_id = deleteBtn.dataset.jobId;
         deleteJob(job_id);
-        const cardEl = stage.querySelector(`.sj-card[data-job-id="${job_id}"]`);
-        if (!cardEl) return;
-        const idx = cards.indexOf(cardEl);
-        cards.splice(idx, 1);
-        cardEl.remove();
-        // Remove corresponding dot
-        const dots = navEl ? navEl.querySelectorAll('.sj-nav__dot') : [];
-        if (dots[idx]) dots[idx].remove();
-        if (cards.length === 0) {
-          stage.innerHTML = emptyStateHtml();
-          if (navEl) navEl.style.display = 'none';
-          return;
-        }
-        if (navEl) navEl.style.display = cards.length > 1 ? '' : 'none';
-        show(Math.min(current, cards.length - 1));
+        removeCard(job_id);
       }
     });
 
@@ -259,7 +266,7 @@
 
   // --- List table ---
 
-  function renderListTable(jobs, containerId, showDelete) {
+  function renderListTable(jobs, containerId, showDelete, stillMatches) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -289,6 +296,11 @@
         </table>
       </div>`;
 
+    function removeRow(job_id) {
+      container.querySelector(`tr[data-job-id="${job_id}"]`)?.remove();
+      if (!container.querySelector('tbody tr')) container.innerHTML = emptyStateHtml();
+    }
+
     container.addEventListener('click', (e) => {
       const toggleBtn = e.target.closest('.js-toggle-applied');
       if (toggleBtn) {
@@ -296,15 +308,15 @@
         const applied = toggleApplied(job_id);
         toggleBtn.classList.toggle('icon-btn--applied', applied);
         toggleBtn.title = applied ? 'Applied — click to unmark' : 'Mark Applied';
+        // If it no longer belongs under the active filter, let it go.
+        if (stillMatches && !stillMatches({ applied })) removeRow(job_id);
         return;
       }
       if (!showDelete) return;
       const deleteBtn = e.target.closest('.js-delete-job');
       if (deleteBtn) {
-        const job_id = deleteBtn.dataset.jobId;
-        deleteJob(job_id);
-        container.querySelector(`tr[data-job-id="${job_id}"]`)?.remove();
-        if (getHistory().length === 0) container.innerHTML = emptyStateHtml();
+        deleteJob(deleteBtn.dataset.jobId);
+        removeRow(deleteBtn.dataset.jobId);
       }
     });
   }
@@ -325,11 +337,14 @@
     const history = getHistory()
       .filter(j => matchesSearch(j, searchTerm))
       .filter(j => matchesAppliedFilter(j, appliedFilter));
+    // Only the applied flag can change without a re-render, so that's all
+    // this needs to re-check when a row is toggled.
+    const stillMatches = j => matchesAppliedFilter(j, appliedFilter);
     const mode = getViewMode();
     if (mode === 'card') {
-      renderCardStack(history, cardStageId, cardNavId, true);
+      renderCardStack(history, cardStageId, cardNavId, true, stillMatches);
     } else {
-      renderListTable(history, listContainerId, true);
+      renderListTable(history, listContainerId, true, stillMatches);
     }
   }
 
