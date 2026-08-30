@@ -55,7 +55,13 @@
     const clearBtn = document.getElementById('btn-clear-history');
     const searchInput = document.getElementById('history-search');
     const filterBar = document.getElementById('applied-filter');
-    let appliedFilter = 'all';
+
+    // Restore the search box and filter chip from the last visit, alongside
+    // the view mode and sort order that were already being remembered.
+    let appliedFilter = StatejobsHistory.getAppliedFilter();
+    searchInput.value = StatejobsHistory.getSearchTerm();
+    filterBar.querySelectorAll('.filter-chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.filter === appliedFilter));
 
     const cardView = document.getElementById('history-card-view');
     const listView = document.getElementById('history-list-view');
@@ -89,13 +95,17 @@
 
     cardBtn.addEventListener('click', () => { StatejobsHistory.setViewMode('card'); render(); });
     listBtn.addEventListener('click', () => { StatejobsHistory.setViewMode('list'); render(); });
-    searchInput.addEventListener('input', render);
+    searchInput.addEventListener('input', () => {
+      StatejobsHistory.setSearchTerm(searchInput.value.trim());
+      render();
+    });
     document.addEventListener('statejobs:applied-changed', refreshCounts);
 
     filterBar.addEventListener('click', (e) => {
       const chip = e.target.closest('.filter-chip');
       if (!chip) return;
       appliedFilter = chip.dataset.filter;
+      StatejobsHistory.setAppliedFilter(appliedFilter);
       filterBar.querySelectorAll('.filter-chip')
         .forEach(c => c.classList.toggle('active', c === chip));
       render();

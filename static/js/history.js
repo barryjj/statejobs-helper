@@ -2,6 +2,9 @@
   const HISTORY_KEY = 'statejobs_history';
   const VIEW_MODE_KEY = 'statejobs_view_mode';
   const SORT_KEY = 'statejobs_sort';
+  const SEARCH_KEY = 'statejobs_search';
+  const FILTER_KEY = 'statejobs_applied_filter';
+  const VALID_FILTERS = ['all', 'applied', 'not-applied'];
 
   // --- Storage ---
 
@@ -59,6 +62,19 @@
   }
 
   function setSort(sort) { localStorage.setItem(SORT_KEY, JSON.stringify(sort)); }
+
+  function getSearchTerm() { return localStorage.getItem(SEARCH_KEY) || ''; }
+  function setSearchTerm(term) { localStorage.setItem(SEARCH_KEY, term || ''); }
+
+  function getAppliedFilter() {
+    const f = localStorage.getItem(FILTER_KEY);
+    // Guard against a stale or hand-edited value silently hiding every row.
+    return VALID_FILTERS.includes(f) ? f : 'all';
+  }
+
+  function setAppliedFilter(filter) {
+    localStorage.setItem(FILTER_KEY, VALID_FILTERS.includes(filter) ? filter : 'all');
+  }
 
   // --- Sorting ---
 
@@ -446,7 +462,10 @@
   // --- Public: history page ---
 
   function renderHistorySection(cardStageId, cardNavId, listContainerId, searchTerm, appliedFilter, onSortChange) {
-    _filtersActive = !!searchTerm || (appliedFilter && appliedFilter !== 'all');
+    // If nothing is saved at all, the filters aren't why the list is empty —
+    // say "no saved jobs", not "nothing matches".
+    _filtersActive = getHistory().length > 0
+      && (!!searchTerm || (appliedFilter && appliedFilter !== 'all'));
     const filtered = getHistory()
       .filter(j => matchesSearch(j, searchTerm))
       .filter(j => matchesAppliedFilter(j, appliedFilter));
@@ -484,6 +503,7 @@
 
   window.StatejobsHistory = {
     upsertJobs, getViewMode, setViewMode, getCounts,
+    getSearchTerm, setSearchTerm, getAppliedFilter, setAppliedFilter,
     renderHistorySection, initResultsPage,
   };
 })();
