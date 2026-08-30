@@ -415,6 +415,43 @@ a:hover {
 }
 
 /* ===========================================================
+    SORTABLE TABLE HEADERS
+    =========================================================== */
+
+.history-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.history-table th.sortable:hover,
+.history-table th.sortable:focus-visible {
+  color: var(--ctp-text);
+  outline: none;
+}
+
+.history-table th.sortable.sorted {
+  color: var(--ctp-accent);
+}
+
+.sort-arrow {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.6rem;
+  vertical-align: 1px;
+  opacity: 0.25;
+  transition: opacity 0.15s ease;
+}
+
+.history-table th.sortable:hover .sort-arrow {
+  opacity: 0.6;
+}
+
+.history-table th.sortable.sorted .sort-arrow {
+  opacity: 1;
+}
+
+/* ===========================================================
     FILTER CHIPS
     =========================================================== */
 

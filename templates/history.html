@@ -74,7 +74,7 @@
       const term = searchInput.value.trim();
       StatejobsHistory.renderHistorySection(
         'history-card-stage', 'history-card-nav', 'history-list-container',
-        term, appliedFilter
+        term, appliedFilter, render
       );
       refreshCounts();
       setView(mode);

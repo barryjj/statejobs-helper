@@ -1,6 +1,7 @@
 (function () {
   const HISTORY_KEY = 'statejobs_history';
   const VIEW_MODE_KEY = 'statejobs_view_mode';
+  const SORT_KEY = 'statejobs_sort';
 
   // --- Storage ---
 
@@ -49,6 +50,87 @@
 
   function getViewMode() { return localStorage.getItem(VIEW_MODE_KEY) || 'card'; }
   function setViewMode(mode) { localStorage.setItem(VIEW_MODE_KEY, mode); }
+
+  function getSort() {
+    try {
+      const s = JSON.parse(localStorage.getItem(SORT_KEY));
+      return s && s.key ? s : { key: null, dir: null };
+    } catch { return { key: null, dir: null }; }
+  }
+
+  function setSort(sort) { localStorage.setItem(SORT_KEY, JSON.stringify(sort)); }
+
+  // --- Sorting ---
+
+  // "06/29/26" (MM/DD/YY) — string comparison looks fine within one year and
+  // then silently breaks across one, so parse to a real timestamp.
+  function parseDue(value) {
+    if (!value) return null;
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(String(value).trim());
+    if (!m) return null;
+    let [, mm, dd, yy] = m;
+    let year = Number(yy);
+    if (yy.length === 2) year += 2000;
+    const t = Date.UTC(year, Number(mm) - 1, Number(dd));
+    return Number.isNaN(t) ? null : t;
+  }
+
+  // Grade is normally a number, with NS ranking above every grade and hourly
+  // below. Sorting the raw string would put grade 9 after grade 25, so rank
+  // numerically and park the two special cases at the ends.
+  function parseGrade(value) {
+    if (!value) return null;
+    const s = String(value).trim();
+    if (/^ns$/i.test(s)) return Infinity;
+    if (/hourly/i.test(s)) return -Infinity;
+    const n = parseInt(s, 10);
+    return Number.isNaN(n) ? null : n;
+  }
+
+  const SORT_ACCESSORS = {
+    job_id:  j => Number(j.job_id) || null,
+    title:   j => (j.title || '').toLowerCase() || null,
+    agency:  j => (j.agency || '').toLowerCase() || null,
+    grade:   j => parseGrade(j.grade),
+    due:     j => parseDue(j.applications_due),
+  };
+
+  function sortJobs(jobs, sort) {
+    if (!sort || !sort.key || !sort.dir) return jobs;
+    const get = SORT_ACCESSORS[sort.key];
+    if (!get) return jobs;
+    const factor = sort.dir === 'desc' ? -1 : 1;
+
+    // decorate so the sort stays stable and blanks keep their original order
+    return jobs
+      .map((job, i) => ({ job, i, v: get(job) }))
+      .sort((a, b) => {
+        // Missing values sink to the bottom in BOTH directions — flipping the
+        // sort shouldn't put a wall of blanks in front of the real rows.
+        const aBlank = a.v === null || a.v === undefined;
+        const bBlank = b.v === null || b.v === undefined;
+        if (aBlank && bBlank) return a.i - b.i;
+        if (aBlank) return 1;
+        if (bBlank) return -1;
+        if (a.v < b.v) return -1 * factor;
+        if (a.v > b.v) return 1 * factor;
+        return a.i - b.i;
+      })
+      .map(d => d.job);
+  }
+
+  const SORT_COLUMNS = [
+    { key: 'job_id', label: 'Job ID' },
+    { key: 'title',  label: 'Title' },
+    { key: 'agency', label: 'Agency' },
+    { key: 'grade',  label: 'Grade' },
+    { key: 'due',    label: 'Due' },
+  ];
+
+  // asc → desc → unsorted, so you can always get back to most-recently-searched
+  function nextSortDir(current) {
+    return current === 'asc' ? 'desc' : current === 'desc' ? null : 'asc';
+  }
 
   // --- Helpers ---
 
@@ -266,7 +348,19 @@
 
   // --- List table ---
 
-  function renderListTable(jobs, containerId, showDelete, stillMatches) {
+  function headerCellsHtml() {
+    const { key, dir } = getSort();
+    return SORT_COLUMNS.map(col => {
+      const active = col.key === key && dir;
+      const arrow = active ? (dir === 'asc' ? '&#9650;' : '&#9660;') : '&#9671;';
+      const aria = active ? (dir === 'asc' ? 'ascending' : 'descending') : 'none';
+      return `<th class="sortable${active ? ' sorted' : ''}" data-sort-key="${col.key}"
+                  role="button" tabindex="0" aria-sort="${aria}"
+                  title="Sort by ${col.label}">${col.label}<span class="sort-arrow">${arrow}</span></th>`;
+    }).join('');
+  }
+
+  function renderListTable(jobs, containerId, showDelete, stillMatches, onSortChange) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -290,7 +384,7 @@
       <div class="history-table-wrap">
         <table class="history-table">
           <thead>
-            <tr><th>Job ID</th><th>Title</th><th>Agency</th><th>Grade</th><th>Due</th><th>Actions</th></tr>
+            <tr>${headerCellsHtml()}<th>Actions</th></tr>
           </thead>
           <tbody>${rowHtml}</tbody>
         </table>
@@ -301,7 +395,26 @@
       if (!container.querySelector('tbody tr')) container.innerHTML = emptyStateHtml();
     }
 
+    function applySort(th) {
+      const key = th.dataset.sortKey;
+      const cur = getSort();
+      const dir = nextSortDir(cur.key === key ? cur.dir : null);
+      setSort({ key: dir ? key : null, dir });
+      if (onSortChange) onSortChange();
+    }
+
+    container.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const th = e.target.closest('th.sortable');
+      if (!th) return;
+      e.preventDefault();
+      applySort(th);
+    });
+
     container.addEventListener('click', (e) => {
+      const th = e.target.closest('th.sortable');
+      if (th) { applySort(th); return; }
+
       const toggleBtn = e.target.closest('.js-toggle-applied');
       if (toggleBtn) {
         const job_id = toggleBtn.dataset.jobId;
@@ -332,11 +445,14 @@
 
   // --- Public: history page ---
 
-  function renderHistorySection(cardStageId, cardNavId, listContainerId, searchTerm, appliedFilter) {
+  function renderHistorySection(cardStageId, cardNavId, listContainerId, searchTerm, appliedFilter, onSortChange) {
     _filtersActive = !!searchTerm || (appliedFilter && appliedFilter !== 'all');
-    const history = getHistory()
+    const filtered = getHistory()
       .filter(j => matchesSearch(j, searchTerm))
       .filter(j => matchesAppliedFilter(j, appliedFilter));
+    // Sort applies to the card stack too, so the deck follows whatever order
+    // was picked in the list view.
+    const history = sortJobs(filtered, getSort());
     // Only the applied flag can change without a re-render, so that's all
     // this needs to re-check when a row is toggled.
     const stillMatches = j => matchesAppliedFilter(j, appliedFilter);
@@ -344,7 +460,7 @@
     if (mode === 'card') {
       renderCardStack(history, cardStageId, cardNavId, true, stillMatches);
     } else {
-      renderListTable(history, listContainerId, true, stillMatches);
+      renderListTable(history, listContainerId, true, stillMatches, onSortChange);
     }
   }
 
@@ -357,8 +473,13 @@
       const saved = history.find(h => h.job_id === j.job_id);
       return { ...j, applied: saved ? saved.applied : false };
     });
-    renderCardStack(enriched, cardStageId, cardNavId, false);
-    renderListTable(enriched, listContainerId, false);
+
+    function draw() {
+      const ordered = sortJobs(enriched, getSort());
+      renderCardStack(ordered, cardStageId, cardNavId, false);
+      renderListTable(ordered, listContainerId, false, null, draw);
+    }
+    draw();
   }
 
   window.StatejobsHistory = {
