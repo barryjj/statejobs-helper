@@ -242,6 +242,20 @@
       </div>`;
   }
 
+  // Attach listeners to a node that outlives the render — the stage, the list
+  // container, the chevrons. Each render replaces the previous render's
+  // listeners instead of stacking on top of them; stacking doubled the handler
+  // count on every sort click until the page froze.
+  function rewire(el, handlers) {
+    if (!el) return;
+    el._sjAbort?.abort();
+    const ac = new AbortController();
+    el._sjAbort = ac;
+    for (const [type, fn] of Object.entries(handlers)) {
+      el.addEventListener(type, fn, { signal: ac.signal });
+    }
+  }
+
   // --- Card stack renderer ---
 
   function renderCardStack(jobs, stageId, navId, showDelete, stillMatches) {
@@ -310,8 +324,8 @@
 
     // Wire nav buttons
     if (navEl) {
-      navEl.querySelector('.sj-nav__prev')?.addEventListener('click', () => nav(-1));
-      navEl.querySelector('.sj-nav__next')?.addEventListener('click', () => nav(1));
+      rewire(navEl.querySelector('.sj-nav__prev'), { click: () => nav(-1) });
+      rewire(navEl.querySelector('.sj-nav__next'), { click: () => nav(1) });
     }
 
     // Pull one card out of the stack in place, keeping the reader's position
@@ -334,7 +348,7 @@
     }
 
     // Wire card action buttons via delegation on stage
-    stage.addEventListener('click', (e) => {
+    rewire(stage, { click: (e) => {
       const toggleBtn = e.target.closest('.js-toggle-applied');
       if (toggleBtn) {
         const job_id = toggleBtn.dataset.jobId;
@@ -353,7 +367,7 @@
         deleteJob(job_id);
         removeCard(job_id);
       }
-    });
+    }});
 
     // Snap to initial position without transition
     cards.forEach(c => c.style.transition = 'none');
@@ -420,34 +434,35 @@
       if (onSortChange) onSortChange();
     }
 
-    container.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const th = e.target.closest('th.sortable');
-      if (!th) return;
-      e.preventDefault();
-      applySort(th);
-    });
+    rewire(container, {
+      keydown: (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const th = e.target.closest('th.sortable');
+        if (!th) return;
+        e.preventDefault();
+        applySort(th);
+      },
+      click: (e) => {
+        const th = e.target.closest('th.sortable');
+        if (th) { applySort(th); return; }
 
-    container.addEventListener('click', (e) => {
-      const th = e.target.closest('th.sortable');
-      if (th) { applySort(th); return; }
-
-      const toggleBtn = e.target.closest('.js-toggle-applied');
-      if (toggleBtn) {
-        const job_id = toggleBtn.dataset.jobId;
-        const applied = toggleApplied(job_id);
-        toggleBtn.classList.toggle('icon-btn--applied', applied);
-        toggleBtn.title = applied ? 'Applied — click to unmark' : 'Mark Applied';
-        // If it no longer belongs under the active filter, let it go.
-        if (stillMatches && !stillMatches({ applied })) removeRow(job_id);
-        return;
-      }
-      if (!showDelete) return;
-      const deleteBtn = e.target.closest('.js-delete-job');
-      if (deleteBtn) {
-        deleteJob(deleteBtn.dataset.jobId);
-        removeRow(deleteBtn.dataset.jobId);
-      }
+        const toggleBtn = e.target.closest('.js-toggle-applied');
+        if (toggleBtn) {
+          const job_id = toggleBtn.dataset.jobId;
+          const applied = toggleApplied(job_id);
+          toggleBtn.classList.toggle('icon-btn--applied', applied);
+          toggleBtn.title = applied ? 'Applied — click to unmark' : 'Mark Applied';
+          // If it no longer belongs under the active filter, let it go.
+          if (stillMatches && !stillMatches({ applied })) removeRow(job_id);
+          return;
+        }
+        if (!showDelete) return;
+        const deleteBtn = e.target.closest('.js-delete-job');
+        if (deleteBtn) {
+          deleteJob(deleteBtn.dataset.jobId);
+          removeRow(deleteBtn.dataset.jobId);
+        }
+      },
     });
   }
 
